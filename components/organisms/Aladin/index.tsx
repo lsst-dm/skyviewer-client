@@ -27,6 +27,11 @@ import styles from "./styles.module.css";
 // any zoom level.
 const HIPS_MIN_ORDER = 3;
 
+// FoV at which the whole celestial sphere fits comfortably in view, so the
+// zoom can always pull back far enough to show the full sky regardless of the
+// configured maximum.
+const FULL_SKY_FOV = 360;
+
 export interface AladinProps {
   menu?: ReactNode;
   fovRange?: Array<number>;
@@ -48,7 +53,8 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
   debug = false,
 }) => {
   const searchParams = useSearchParams();
-  const position = clientInitialPosition({ searchParams, fovRange });
+  const zoomRange = fovRange && [fovRange[0], FULL_SKY_FOV];
+  const position = clientInitialPosition({ searchParams, fovRange: zoomRange });
 
   const [savedAladinOptions, setSavedAladinOptions] =
     useLocalStorage<AladinOptions>("aladin-options", {
@@ -123,8 +129,8 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
             });
           }
 
-          if (fovRange) {
-            instance.setFoVRange(fovRange[0], fovRange[1]);
+          if (zoomRange) {
+            instance.setFoVRange(zoomRange[0], zoomRange[1]);
           }
 
           layers.forEach(({ id, survey }) => {
