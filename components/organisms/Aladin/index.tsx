@@ -14,9 +14,23 @@ import {
 import { useLocalStorage, useOnClickOutside } from "usehooks-ts";
 import staticAladinOptions from "@/fixtures/defaultAladinOptions";
 import { clientInitialPosition } from "@/lib/helpers";
+import { forceHiPSMinOrder, tameWheelZoom } from "@/lib/aladin/helpers";
 import { SurveyLayer } from "@/lib/schema/survey";
 import AladinContext, { defaultValue } from "@/contexts/Aladin";
 import styles from "./styles.module.css";
+
+// Rubin HiPS only contain tiles for orders 3 and above (plus an order-3 Allsky
+// preview), but their properties files do not declare hips_order_min. Without
+// it, Aladin requests the non-existent order 0-2 tiles once zoomed out far
+// enough and the imagery vanishes; declaring the minimum order makes Aladin
+// fall back to the Allsky preview instead, so the covered sky stays visible at
+// any zoom level.
+const HIPS_MIN_ORDER = 3;
+
+// FoV at which the whole celestial sphere fits comfortably in view, so the
+// zoom can always pull back far enough to show the full sky regardless of the
+// configured maximum.
+const FULL_SKY_FOV = 360;
 
 export interface AladinProps {
   menu?: ReactNode;
@@ -39,7 +53,8 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
   debug = false,
 }) => {
   const searchParams = useSearchParams();
-  const position = clientInitialPosition({ searchParams, fovRange });
+  const zoomRange = fovRange && [fovRange[0], FULL_SKY_FOV];
+  const position = clientInitialPosition({ searchParams, fovRange: zoomRange });
 
   const [savedAladinOptions, setSavedAladinOptions] =
     useLocalStorage<AladinOptions>("aladin-options", {
@@ -65,6 +80,16 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
 
   const onMounted = useCallback<RefCallback<HTMLDivElement>>((node) => {
     if (node) {
+      if ("serviceWorker" in navigator) {
+        // Serves already-seen HiPS tiles from the browser cache without the
+        // revalidation round trip the tile server's cache-control demands;
+        // see public/hips-tile-cache-sw.js. Purely an optimization, so
+        // registration failures are ignored.
+        navigator.serviceWorker.register("/hips-tile-cache-sw.js").catch(() => {
+          // noop
+        });
+      }
+
       import("aladin-lite").then((module) => {
         const global: A = module.default;
 
@@ -73,13 +98,42 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
         const [base] = layers.splice(0, 1);
 
         global.init.then(() => {
+          const createHiPS = (
+            { path, maxOrder, imgFormat, tileSize }: SurveyLayer["survey"],
+            { isBase = false } = {}
+          ) => {
+            const hips = global.HiPS(path, {
+              maxOrder,
+              imgFormat,
+              tileSize,
+              successCallback: () => {
+                if (debug) {
+                  console.info("Loaded", path);
+                }
+              },
+              errorCallback: () => {
+                if (debug) {
+                  console.info("Error loading", path);
+                }
+              },
+            });
+
+            // Only the base layer falls back to the Allsky preview: the
+            // preview's uncovered cells are opaque black (no alpha channel),
+            // which is invisible against the black sky for the base but would
+            // black out everything beneath an overlay.
+            return isBase ? forceHiPSMinOrder(hips, HIPS_MIN_ORDER) : hips;
+          };
+
           const instance = global.aladin(node, {
             ...staticAladinOptions,
             ...savedAladinOptions,
             ...options,
-            survey: base.survey.path,
+            survey: createHiPS(base.survey, { isBase: true }),
             ...(initializeWithParams && position),
           });
+
+          tameWheelZoom(instance);
 
           if (debug) {
             instance.on("layerChanged", (layer, stack, action) => {
@@ -87,49 +141,23 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
             });
           }
 
-          if (fovRange) {
-            instance.setFoVRange(fovRange[0], fovRange[1]);
+          if (zoomRange) {
+            instance.setFoVRange(zoomRange[0], zoomRange[1]);
           }
 
-          layers.forEach(
-            ({
-              id,
-              survey: {
-                path,
-                opacity,
-                maxOrder,
-                imgFormat,
-                tileSize,
-                showOnLoad,
-                optionalLayer
-              },
-            }) => {
-              const hips = global.HiPS(path, {
-                maxOrder,
-                imgFormat,
-                tileSize,
-                successCallback: () => {
-                  if (debug) {
-                    console.info("Loaded", path);
-                  }
-                },
-                errorCallback: () => {
-                  if (debug) {
-                    console.info("Error loading", path);
-                  }
-                },
-              });
+          layers.forEach(({ id, survey }) => {
+            const { opacity, showOnLoad, optionalLayer } = survey;
+            const hips = createHiPS(survey);
 
-              let effectiveOpacity = opacity;
-              if(optionalLayer) {
-                effectiveOpacity = showOnLoad ? opacity : 0;
-              }
-
-              hips.setOpacity(effectiveOpacity);
-
-              instance.setOverlayImageLayer(hips, id);
+            let effectiveOpacity = opacity;
+            if (optionalLayer) {
+              effectiveOpacity = showOnLoad ? opacity : 0;
             }
-          );
+
+            hips.setOpacity(effectiveOpacity);
+
+            instance.setOverlayImageLayer(hips, id);
+          });
 
           if (debug) {
             console.info(instance);
