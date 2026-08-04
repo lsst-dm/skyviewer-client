@@ -6,7 +6,9 @@ As of August 2026, **every topic branch has been merged into the fork's
 `main`** (individual `--no-ff` merge commits), after a per-branch review pass
 in which an agent audited each branch and squashed any fixes into the
 originating commits. The topic branches are kept on the remote, frozen, so
-upstream can diff or cherry-pick each change in isolation.
+upstream can diff or cherry-pick each change in isolation. Branches added
+since are based on the fork's `main` rather than upstream's, because they
+build on what is already merged there.
 
 | Branch | Base | Contents |
 |--------|------|----------|
@@ -19,6 +21,7 @@ upstream can diff or cherry-pick each change in isolation.
 | `u/mfl/agent-docs` | upstream `main` | CLAUDE.md + this `architecture/` directory, as originally written |
 | `u/mfl/agent-docs-updated` | `u/mfl/agent-docs` | same docs plus this post-merge update; the merged version. Upstream can take either |
 | `u/mfl/dedupe-eslint-plugin-import` | upstream `main` | resolutions pin collapsing the two installed copies of `eslint-plugin-import` to one |
+| `u/mfl/sky-curvature` | fork `main` | auto coordinate grid + Earth globe, both keyed on one "is the sky curved?" threshold (two commits) |
 
 (A couple of additional remote branches are historical pre-merge integration
 branches, superseded by `main`; they are not upstream-relevant.)

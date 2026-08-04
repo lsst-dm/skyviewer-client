@@ -120,3 +120,31 @@ Facts that matter (verified Aug 2026):
 - The Earth-scale overlay (`components/molecules/ExplorerControls/EarthScale`)
   consumes `zoom.changed` and maps sky solid angle → Earth area
   (`fixtures/earthScale.ts`).
+- `lib/aladin/curvature.ts` + `hooks/useSkyCurvature.ts` — one shared answer
+  to "is the sky visibly curved?" (fov ≥ 40°, released at 30°; the gap keeps a
+  settling zoom animation from flickering it). Two things hang off it: the
+  coordinate grid turns itself on and off (`ExplorerControls/ToggleGrid`,
+  unless the user has worked the toggle, after which their choice stands), and
+  the Earth-scale comparison swaps between a flat map and a globe.
+- **A second aladin instance** renders Earth for that comparison
+  (`ExplorerControls/EarthScale/EarthGlobe.tsx`): CDS's Blue Marble HiPS
+  (`https://alasky.cds.unistra.fr/Planets/CDS_P_Earth_BlueMarble`, order 5,
+  jpeg, CORS `*`) at the sky view's own fov and projection, so both spheres
+  curve identically. Things learned building it:
+  - Because the comparison maps the whole sky onto the whole Earth, matching
+    `fovX` degree for degree also matches the area. `view.fov` *is* the
+    horizontal fov (`getFov()` derives fovY from the viewport aspect), so one
+    `setFov(fovX)` on a same-sized div is an exact match.
+  - **Aladin instances cannot be destroyed**: `View.redraw` re-arms its own
+    `requestAnimationFrame` unconditionally, and nothing releases the WebGL
+    context. Creating one per open would exhaust the browser's context limit,
+    so the globe is built once, lazily, and its layer is hidden (not
+    unmounted) thereafter.
+  - Aladin puts its own classes on the div it is handed and sizes itself from
+    that div's box; giving it a `position: absolute; inset: 0` div collapses
+    it to zero height. Give it a plain child sized `100%`/`100%` instead.
+  - The survey's `hips_initial_fov` does *not* override the `fov` option
+    (unlike several other properties keys — quirk 1).
+  - `setCooGrid` only ever emits `cooGrid.updated`, never
+    `cooGrid.enabled`/`.disabled`, so mirroring grid state means reading
+    `view.gridCfg.enabled` back out on that event.

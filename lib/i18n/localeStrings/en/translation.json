@@ -105,6 +105,7 @@
     "earth_scale_close": "Swap back to the sky",
     "earth_scale_caption": "At this scale your view of the sky would cover roughly <1>{{place}}</1> (~{{area}} km²)",
     "earth_scale_map": "Map of Earth centered on {{place}}, at the same scale as your view of the sky",
+    "earth_scale_globe": "Globe of Earth centered on {{place}}, seen at the same scale and curvature as your view of the sky",
     "earth_scale_centers": "Choose where to center the map"
   },
   "menu": {
