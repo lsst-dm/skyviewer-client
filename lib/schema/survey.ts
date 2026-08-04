@@ -54,10 +54,17 @@ export const surveyImageSchema = z
     path: z.string(),
   })
   .transform(({ fovMin, fovMax, ...output }) => {
-    const path =
+    let path =
       env.CLOUD_ENV === "DEV"
         ? output.path.replace("https://storage.googleapis.com/", "/api/gcs/")
         : output.path;
+
+    if (env.HIPS_DATA_DIR) {
+      path = path.replace(
+        "https://images.rubinobservatory.org/hips/",
+        "/api/hips/"
+      );
+    }
 
     return {
       ...output,

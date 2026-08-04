@@ -15,6 +15,9 @@ export const env = createEnv({
     CLOUD_ENV: z.enum(["PROD", "INT", "DEV"]).default("DEV"),
     CRAFT_REVALIDATE_SECRET_TOKEN: z.string().min(1),
     CRAFT_SECRET_TOKEN: z.string().min(1),
+    /** absolute path to a local mirror of the HiPS surveys; when set, survey
+     * tiles are served from this directory instead of the remote host */
+    HIPS_DATA_DIR: z.string().min(1).optional(),
     PLAUSIBLE_DOMAIN: z.string().min(1).optional(),
     /** if enabled, will add a forced Cache-Control header to RSC responses */
     NEXT_RSC_CACHE_CONTROL: COERCED_BOOLEAN.optional().default(true),
