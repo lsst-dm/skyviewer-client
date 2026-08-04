@@ -46,9 +46,10 @@ values are recoverable from the deployed bundle's JS chunks.
 
 Lives in `~/git/mflabs-infra` (branch `skyviewer`), not this repo:
 
-- Deployable checkout: `~/git/skyviewer-client` tracking
-  `u/mfl/mflabs-deploy`. Update flow: push to the fork → `git pull` there →
-  `python deploy.py skyviewer` in mflabs-infra.
+- Deployable checkout: `~/git/skyviewer-client` tracking the fork's `main`
+  (which since August 2026 contains all topic branches, including the
+  Dockerfile self-containment fix). Update flow: push to the fork →
+  `git pull` there → `python deploy.py skyviewer` in mflabs-infra.
 - deploy.py rsyncs the checkout to `/opt/skyviewer` on the Hetzner box
   (excludes `node_modules`/`.next`/`.env`), scps
   `~/secrets/mflabs-infra/skyviewer.env` to `/opt/skyviewer/.env`, and

@@ -56,8 +56,8 @@ Facts that matter (verified Aug 2026):
   cells are black filler. This is why the min-order workaround must apply to
   the *base layer only*: an overlay's Allsky-backed texture cells paint black
   over everything beneath (we shipped and reverted that bug).
-- The bucket (GCS behind a Hetzner-agnostic LB, `x-goog-*` headers, bucket
-  name not exposed) serves `Access-Control-Allow-Origin: *` but
+- The bucket (GCS behind a load balancer; `x-goog-*` headers visible but the
+  bucket name is not exposed) serves `Access-Control-Allow-Origin: *` but
   `cache-control: private, max-age=0` — so browsers must revalidate every
   tile per session (~300 ms each). Tiles are immutable in practice
   (reprocessings get new paths), hence the service-worker cache
@@ -111,7 +111,10 @@ Facts that matter (verified Aug 2026):
 - `public/hips-tile-cache-sw.js` — cache-first service worker for tile URLs
   (`Norder\d+/(Dir\d+/Npix\d+|Allsky)`), 2000-entry FIFO, plus negative
   (404) caching with 7-day TTL for cross-origin hosts only. Registered in
-  the organism. `properties`/`Moc.fits` untouched.
+  the organism. `properties`/`Moc.fits` untouched. Cache reads/writes are
+  best-effort (`QuotaExceededError` etc. can never fail the tile request)
+  and the trim counter is primed at worker start so the cap survives short
+  service-worker lifetimes. Known gap: `fits`-format tiles aren't matched.
 - `/api/hips/[...path]` + `HIPS_DATA_DIR` — optional local tile mirror
   serving (see `deployment.md`).
 - The Earth-scale overlay (`components/molecules/ExplorerControls/EarthScale`)
