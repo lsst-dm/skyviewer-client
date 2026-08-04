@@ -10,7 +10,7 @@ upstream can diff or cherry-pick each change in isolation.
 
 | Branch | Base | Contents |
 |--------|------|----------|
-| `main` | upstream `main` | all topic branches merged; what the VPS deploys |
+| `main` | upstream `main` | all topic branches merged; the deployed branch |
 | `u/mfl/full-sky-zoom` | upstream `main` | the four upstream-facing fixes (below) |
 | `u/mfl/earth-scale` | upstream `main` | Earth-scale comparison feature (one commit) |
 | `u/mfl/local-hips-data` | upstream `main` | `HIPS_DATA_DIR` local tile mirror serving (one commit) |
@@ -18,8 +18,10 @@ upstream can diff or cherry-pick each change in isolation.
 | `u/mfl/docker-self-contained` | upstream `main` | one-line fix: runner image now contains `.next` (upstream CI injects it externally) |
 | `u/mfl/agent-docs` | upstream `main` | CLAUDE.md + this `architecture/` directory, as originally written |
 | `u/mfl/agent-docs-updated` | `u/mfl/agent-docs` | same docs plus this post-merge update; the merged version. Upstream can take either |
-| `u/mfl/mflabs-deploy` | `deploy` | historical: what the VPS ran before the merge to `main` |
-| `deploy` | — | historical integration branch (cherry-picked composition), superseded by `main` |
+| `u/mfl/dedupe-eslint-plugin-import` | upstream `main` | resolutions pin collapsing the two installed copies of `eslint-plugin-import` to one |
+
+(A couple of additional remote branches are historical pre-merge integration
+branches, superseded by `main`; they are not upstream-relevant.)
 
 ## The four fixes on `u/mfl/full-sky-zoom`
 

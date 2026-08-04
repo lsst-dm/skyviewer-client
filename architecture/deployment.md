@@ -12,7 +12,7 @@
 - `nextjs-copy` (scratch): exports `.next` alone — upstream's pipeline
   versions `.next` in a GCS bucket via this stage.
 - `runner`: upstream copies from `builder` (i.e. *without* `.next`, relying
-  on that external injection); the fork's `u/mfl/mflabs-deploy` branch copies
+  on that external injection); the fork's `u/mfl/docker-self-contained` fix copies
   from `yarn-builder` so a plain `docker build` yields a runnable image.
   `EXPOSE 8080`, `CMD yarn start` (`next start -p 8080`).
 
@@ -41,23 +41,6 @@ runner stage doesn't need it), then `repository_dispatch` to
 legacy/unused. No lint/test/typecheck runs in CI. The prod CMS is
 `api.skyviewer.app` (Craft; answers unauthenticated queries); public env
 values are recoverable from the deployed bundle's JS chunks.
-
-## Fork deployment (skyviewer.mflabs.dev)
-
-Lives in `~/git/mflabs-infra` (branch `skyviewer`), not this repo:
-
-- Deployable checkout: `~/git/skyviewer-client` tracking the fork's `main`
-  (which since August 2026 contains all topic branches, including the
-  Dockerfile self-containment fix). Update flow: push to the fork →
-  `git pull` there → `python deploy.py skyviewer` in mflabs-infra.
-- deploy.py rsyncs the checkout to `/opt/skyviewer` on the Hetzner box
-  (excludes `node_modules`/`.next`/`.env`), scps
-  `~/secrets/mflabs-infra/skyviewer.env` to `/opt/skyviewer/.env`, and
-  `docker compose up -d --build`. Caddy terminates TLS internally;
-  Cloudflare proxies `skyviewer.mflabs.dev` (AAAA → the box's IPv6, SSL
-  Full). Scoped deploys don't reload Caddy — see mflabs-infra's CLAUDE.md.
-- The box stores no survey data: browsers fetch tiles straight from
-  `images.rubinobservatory.org`; CMS reads go to `api.skyviewer.app`.
 
 ## Local HiPS mirror (optional, dev)
 
