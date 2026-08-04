@@ -16,7 +16,7 @@ public-outreach browser for LSST sky imagery. Three pillars:
 |-------|------|
 | Framework | Next.js ~14.2 (app router, `[locale]` segment), React 18, TypeScript |
 | Sky rendering | aladin-lite 3.6.5 (wasm core) — see `aladin-and-hips.md` |
-| Content/config | Craft CMS GraphQL (`api.skyviewer.app`), urql, GraphQL codegen, zod v3 validation — see `data-layer.md` |
+| Content/config | Craft CMS GraphQL (`api.skyviewer.app`), urql, GraphQL codegen, zod validation (zod 3.25 via its `zod/v4` subpath) — see `data-layer.md` |
 | i18n | next-intl (routing/server) + react-i18next (component strings), en/es/ja |
 | UI | atomic-design components, CSS modules (+ SCSS globals), `@rubin-epo/epo-react-lib`, `motion` — see `ui-and-tooling.md` |
 | Audio | p5 / web audio for sonification |

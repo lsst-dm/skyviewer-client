@@ -77,7 +77,16 @@ tour state machine), `GlobalData.js` (CMS globals, last PropTypes holdout),
   `fix:styled` script).
 - `.prettierrc.json` is an empty file — all defaults. eslint extends
   standard/next/prettier/a11y; `no-console` allows warn/error/info;
-  unused imports are errors; `exhaustive-deps` is a warning.
+  unused imports are errors; `exhaustive-deps` is a warning. **Sharp edge:**
+  two copies of `eslint-plugin-import` are installed (top-level via
+  `eslint-config-standard` vs nested under `eslint-config-next`). A standard
+  yarn layout resolves fine, but any layout reaching `node_modules` through
+  a symlink (shared installs across git worktrees, pnpm-style setups) makes
+  eslint abort with `couldn't determine the plugin "import" uniquely`. The
+  `u/mfl/dedupe-eslint-plugin-import` branch pins a single copy via
+  `resolutions`. Also note upstream `main` carries pre-existing prettier
+  violations in files the lint script's `*.{js,jsx}` glob never covers
+  (e.g. Search, SonificationControls) — don't "fix" them in unrelated diffs.
 - Tests: vitest + jsdom; exactly one spec (`__tests__/utilities.spec.ts`);
   `@testing-library/react` installed but unused. `tsc --noEmit` is in no
   script and no CI — run it yourself.

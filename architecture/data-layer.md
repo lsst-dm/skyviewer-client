@@ -92,5 +92,5 @@ imports files that don't exist; `lib/locales.js` is legacy (no `ja`).
 Preview mode: every `queryAPI` call then auto-uses the cookie token with
 `revalidate: 0`; `PreviewMode` renders a banner with end/revalidate server
 actions — note the revalidate secret is passed to the client as a prop and
-back (known weak point). The `surveys` tag is registered but nothing ever
-emits it.
+back (known weak point). The `surveys` tag is only emitted for CMS uris
+whose first segment is `surveys/`, which current webhooks never send.

@@ -31,6 +31,9 @@ yarn static:build       # production build (what the Dockerfile runs)
 - Hooks: `commit-msg` → commitlint, `pre-push` → `yarn test`. There is no
   pre-commit hook (the lint-staged config never fires), and upstream CI runs
   no lint/tests/typecheck — local checks are the only gate.
+- eslint works in a normal checkout but aborts if `node_modules` is reached
+  through a symlink (duplicate `eslint-plugin-import` copies) — see
+  `architecture/ui-and-tooling.md` for the dedupe fix.
 - `tsc --noEmit` is not in any script or CI but the repo typechecks cleanly;
   run it before pushing.
 

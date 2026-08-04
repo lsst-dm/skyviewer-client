@@ -12,7 +12,7 @@
 - `nextjs-copy` (scratch): exports `.next` alone — upstream's pipeline
   versions `.next` in a GCS bucket via this stage.
 - `runner`: upstream copies from `builder` (i.e. *without* `.next`, relying
-  on that external injection); the fork's `u/mfl/docker-self-contained` branch copies
+  on that external injection); the fork's `u/mfl/docker-self-contained` fix copies
   from `yarn-builder` so a plain `docker build` yields a runnable image.
   `EXPOSE 8080`, `CMD yarn start` (`next start -p 8080`).
 

@@ -111,7 +111,10 @@ Facts that matter (verified Aug 2026):
 - `public/hips-tile-cache-sw.js` — cache-first service worker for tile URLs
   (`Norder\d+/(Dir\d+/Npix\d+|Allsky)`), 2000-entry FIFO, plus negative
   (404) caching with 7-day TTL for cross-origin hosts only. Registered in
-  the organism. `properties`/`Moc.fits` untouched.
+  the organism. `properties`/`Moc.fits` untouched. Cache reads/writes are
+  best-effort (`QuotaExceededError` etc. can never fail the tile request)
+  and the trim counter is primed at worker start so the cap survives short
+  service-worker lifetimes. Known gap: `fits`-format tiles aren't matched.
 - `/api/hips/[...path]` + `HIPS_DATA_DIR` — optional local tile mirror
   serving (see `deployment.md`).
 - The Earth-scale overlay (`components/molecules/ExplorerControls/EarthScale`)
