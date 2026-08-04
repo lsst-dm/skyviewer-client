@@ -9,6 +9,7 @@ import FullscreenToggle from "./FullscreenToggle";
 import ReturnToInital from "./ReturnToInitial";
 import Search from "./Search";
 import ViewScale from "./ViewScale";
+import EarthScale from "./EarthScale";
 import AladinOverlay from "@/components/atomic/AladinOverlay";
 import useAladinKeyboardControls from "@/hooks/useAladinKeyboardControls";
 import styles from "./styles.module.css";
@@ -36,6 +37,7 @@ const ExplorerControls: FC = () => {
         <ControlStack position="bottom left">
           <FullscreenToggle />
           <Share embed />
+          <EarthScale />
         </ControlStack>
       </div>
       <div className={styles.viewScaleContainer}>
