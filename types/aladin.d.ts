@@ -290,6 +290,8 @@ interface Aladin {
   readonly getFovCorners: (nbSteps?: number) => [number, number][];
   readonly getFrame: () => CooFrame;
   readonly setFrame: (frame: CooFrame) => void;
+  readonly getProjectionName: () => AladinProjection;
+  readonly setProjection: (projection: AladinProjection) => void;
   readonly setFov: (degrees: number) => void;
   readonly adjustFovForObject: (target: string) => void;
   readonly setFoVRange: (minFov: number, maxFov: number) => void;

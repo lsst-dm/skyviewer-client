@@ -5,12 +5,15 @@ import { IoMdGlobe } from "react-icons/io";
 import clsx from "clsx/lite";
 import { Trans, useTranslation } from "react-i18next";
 import { useDebounceValue } from "usehooks-ts";
+import EarthGlobe from "./EarthGlobe";
 import { useAladin } from "@/contexts/Aladin";
 import useAladinEvent from "@/hooks/useAladinEvent";
+import useSkyCurvature from "@/hooks/useSkyCurvature";
 import IconButton from "@/components/atomic/IconButton";
 import {
   EARTH_SURFACE_KM2,
   earthCenters,
+  earthHiPS,
   earthRegions,
   type EarthCenter,
   type EarthRegion,
@@ -44,7 +47,9 @@ const closestRegion = (areaKm2: number): EarthRegion => {
 /**
  * OpenStreetMap's embeddable map, anchored on the chosen center and framed so
  * the viewport shows exactly the equivalent Earth area: the map swaps in for
- * the sky at matching scale.
+ * the sky at matching scale. Used for the narrow fields of view, where the sky
+ * is flat enough that a flat map is a fair comparison and the street detail is
+ * what makes the scale mean something; a curved sky gets the globe instead.
  */
 const embedUrl = (center: EarthCenter, areaKm2: number, aspect: number) => {
   const widthKm = Math.sqrt(areaKm2 * aspect);
@@ -85,6 +90,8 @@ const EarthScale: FC<EarthScaleProps> = ({ className }) => {
     undefined,
     400
   );
+  const [showGrid, setShowGrid] = useState(false);
+  const isCurved = useSkyCurvature();
   const {
     t,
     i18n: { language },
@@ -97,6 +104,7 @@ const EarthScale: FC<EarthScaleProps> = ({ className }) => {
 
   const onLoaded: AdditionalAladinCallbacks["onLoaded"] = ({ aladin }) => {
     updateFov(...aladin.getFov());
+    setShowGrid(aladin.view.gridCfg.enabled);
   };
 
   const onZoomChanged = ({
@@ -106,13 +114,20 @@ const EarthScale: FC<EarthScaleProps> = ({ className }) => {
   };
 
   useAladinEvent("zoom.changed", onZoomChanged);
+  // Aladin reports every change to the grid as one "updated" event, so the
+  // globe's graticule follows the sky's by reading the state back out.
+  useAladinEvent("cooGrid.updated", () => {
+    setShowGrid(!!aladin?.view.gridCfg.enabled);
+  });
   const { aladin } = useAladin({ callbacks: { onLoaded } });
 
   if (!fov || !aladin) return null;
 
+  const [fovX] = fov;
   const [mapFovX, mapFovY] = mapFov ?? fov;
   const areaKm2 = equivalentEarthAreaKm2(mapFovX, mapFovY);
   const region = closestRegion(areaKm2);
+  const showGlobe = active && isCurved;
 
   // rendered into the viewer wrapper so it covers the sky canvas exactly,
   // above it but beneath the controls overlay, in and out of fullscreen
@@ -120,47 +135,63 @@ const EarthScale: FC<EarthScaleProps> = ({ className }) => {
 
   return (
     <>
-      {active &&
-        wrapper &&
+      {wrapper &&
         createPortal(
-          <div className={styles.mapView}>
-            <iframe
-              className={styles.map}
-              src={embedUrl(center, areaKm2, mapFovX / mapFovY)}
-              title={t("controls.earth_scale_map", { place: center.name })}
+          // The globe outlives any one visit to the comparison (see
+          // EarthGlobe), so the layer it lives in stays mounted and is hidden
+          // rather than unmounted while the comparison is closed.
+          <div className={styles.mapView} data-active={active}>
+            <EarthGlobe
+              className={clsx(styles.globe, !showGlobe && styles.hidden)}
+              enabled={showGlobe}
+              fov={fovX}
+              projection={aladin.getProjectionName()}
+              {...{ center, showGrid }}
             />
-            <div className={styles.caption}>
-              <p className={styles.captionText} aria-live="polite">
-                <Trans
-                  i18nKey="controls.earth_scale_caption"
-                  values={{
-                    place: region.name,
-                    area: formatArea(region.areaKm2, language),
-                  }}
-                  shouldUnescape={true}
-                >
-                  At this scale your view of the sky would cover roughly
-                  <strong>{region.name}</strong>
-                  (~{formatArea(region.areaKm2, language)} km²)
-                </Trans>
-              </p>
-              <div
-                className={styles.centerPicker}
-                role="group"
-                aria-label={t("controls.earth_scale_centers")}
-              >
-                {earthCenters.map((option) => (
-                  <button
-                    key={option.id}
-                    className={styles.centerButton}
-                    aria-pressed={option.id === center.id}
-                    onClick={() => setCenter(option)}
+            {active && !isCurved && (
+              <iframe
+                className={styles.map}
+                src={embedUrl(center, areaKm2, mapFovX / mapFovY)}
+                title={t("controls.earth_scale_map", { place: center.name })}
+              />
+            )}
+            {active && (
+              <div className={styles.caption}>
+                <p className={styles.captionText} aria-live="polite">
+                  <Trans
+                    i18nKey="controls.earth_scale_caption"
+                    values={{
+                      place: region.name,
+                      area: formatArea(region.areaKm2, language),
+                    }}
+                    shouldUnescape={true}
                   >
-                    {option.name}
-                  </button>
-                ))}
+                    At this scale your view of the sky would cover roughly
+                    <strong>{region.name}</strong>
+                    (~{formatArea(region.areaKm2, language)} km²)
+                  </Trans>
+                </p>
+                <div
+                  className={styles.centerPicker}
+                  role="group"
+                  aria-label={t("controls.earth_scale_centers")}
+                >
+                  {earthCenters.map((option) => (
+                    <button
+                      key={option.id}
+                      className={styles.centerButton}
+                      aria-pressed={option.id === center.id}
+                      onClick={() => setCenter(option)}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+                {showGlobe && (
+                  <p className={styles.credit}>{earthHiPS.credit}</p>
+                )}
               </div>
-            </div>
+            )}
           </div>,
           wrapper
         )}

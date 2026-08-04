@@ -39,6 +39,21 @@ export const earthRegions: Array<EarthRegion> = [
   { name: "the entire surface of Earth", areaKm2: EARTH_SURFACE_KM2 },
 ];
 
+/**
+ * CDS's HiPS of NASA's Blue Marble Next Generation, which Aladin Lite renders
+ * natively. A second Aladin instance showing it at the sky view's own field of
+ * view and projection curves exactly as the sky does, so a globe of sky can be
+ * held against a globe of Earth.
+ *
+ * It tops out at order 5, about 400 m per pixel, so it has nothing to say
+ * about a city block; the flat street map stays in charge of the narrow fields
+ * of view, where the sky is flat anyway and the street detail is the point.
+ */
+export const earthHiPS = {
+  url: "https://alasky.cds.unistra.fr/Planets/CDS_P_Earth_BlueMarble",
+  credit: "Blue Marble: Next Generation, NASA Earth Observatory / CDS",
+};
+
 export interface EarthCenter {
   id: string;
   name: string;
