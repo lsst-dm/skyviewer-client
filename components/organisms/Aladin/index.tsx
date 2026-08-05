@@ -99,9 +99,13 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
       import("aladin-lite").then((module) => {
         const global: A = module.default;
 
-        layers.reverse();
-
-        const [base] = layers.splice(0, 1);
+        // last layer is the base and the rest stack on top in reverse
+        // order. Copy rather than mutate: the Display menu renders from
+        // this same array, and re-renders after aladin loads — reversing
+        // and splicing it in place made the menu re-draw against a
+        // reordered list missing its base entry (empty, for a single
+        // survey), so layers silently vanished from the menu
+        const [base, ...overlays] = [...layers].reverse();
 
         global.init.then(() => {
           const createHiPS = (
@@ -151,7 +155,7 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
             instance.setFoVRange(zoomRange[0], zoomRange[1]);
           }
 
-          layers.forEach(({ id, survey }) => {
+          overlays.forEach(({ id, survey }) => {
             const { opacity, showOnLoad, optionalLayer } = survey;
             const hips = createHiPS(survey);
 
