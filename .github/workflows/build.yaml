@@ -21,6 +21,12 @@ name: Build and push to GHCR
     tags:
       - "v*"
 
+# a superseded commit's image is dead weight while iterating on a ticket
+# branch, so cancel its build; main and tags always build to completion
+concurrency:
+  group: "build-${{ github.ref }}"
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/tickets/') }}
+
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -2,13 +2,17 @@
 # Rebuild the source code only when needed 
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY --exclude=.env . /app
 RUN apk add --no-cache libc6-compat git fontconfig
+# dependencies before source: a source-only commit then reuses the cached
+# install layer (kept warm between CI runs by the gha buildx cache) instead
+# of re-running yarn install on every build
+COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
+COPY --exclude=.env . /app
 
 FROM builder AS yarn-builder
 RUN --mount=type=bind,source=.env,target=/app/.env \
-    npx update-browserslist-db@latest && yarn static:build
+    yarn static:build
 
 # FOR GCS bucket .next folder versioning
 FROM scratch AS nextjs-copy
