@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# the same checks CI runs before building the image, so failures surface
+# here instead of in the slow and costly build step
+yarn verify
