@@ -20,10 +20,9 @@ export const env = createEnv({
      * below it mirror the remote host's, so a mirror of the public surveys
      * contains a "hips" subdirectory */
     HIPS_DATA_DIR: z.string().min(1).optional(),
-    /** path, relative to HIPS_DATA_DIR, of a single HiPS to show instead of
-     * the surveys the CMS advertises — e.g. "LSSTCam/hips/ltl2/color_gri".
-     * For deployments serving private processings the CMS has no entry for;
-     * requires HIPS_DATA_DIR */
+    /** path, relative to HIPS_DATA_DIR, of the survey to show when the URL
+     * does not name one — e.g. "LSSTCam/hips/ltl2/color_gri". Without it the
+     * first survey discovered is shown instead. Requires HIPS_DATA_DIR */
     HIPS_SURVEY: z
       .string()
       .min(1)

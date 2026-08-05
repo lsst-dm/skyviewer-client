@@ -6,6 +6,7 @@ import { env } from "@/env";
 import { withBasePath } from "@/lib/basePath";
 import { SurveyLayer } from "@/lib/schema/survey";
 import { HiPSProperties, parseHiPSProperties } from "@/lib/hips/properties";
+import { DiscoveredSurvey, discoverSurveys } from "@/lib/hips/discover";
 
 /** what the CMS would supply for a survey it knows about, for the fields a
  * HiPS `properties` file does not carry */
@@ -17,6 +18,39 @@ const defaults = {
   cooFrame: "ICRS" as CooFrame,
   maxOrder: 11,
   tileSize: 512 as TileSize,
+};
+
+/**
+ * Scanning the tree means a readdir per directory over a shared filesystem,
+ * and the result changes only when someone stages a new survey, so hold it
+ * for a while rather than repeating it on every page view.
+ */
+const CATALOGUE_TTL_MS = 5 * 60 * 1000;
+
+let catalogue: { at: number; surveys: DiscoveredSurvey[] } | null = null;
+
+/**
+ * Every survey staged under HIPS_DATA_DIR, cached briefly.
+ *
+ * Empty when no mirror is configured, which is what makes the CMS surveys
+ * the ones that get used.
+ */
+export const getSurveyCatalogue = async (): Promise<DiscoveredSurvey[]> => {
+  const { HIPS_DATA_DIR } = env;
+
+  if (!HIPS_DATA_DIR) {
+    return [];
+  }
+
+  if (catalogue && Date.now() - catalogue.at < CATALOGUE_TTL_MS) {
+    return catalogue.surveys;
+  }
+
+  const surveys = await discoverSurveys(HIPS_DATA_DIR);
+
+  catalogue = { at: Date.now(), surveys };
+
+  return surveys;
 };
 
 /** builds the viewer's layer for one survey found on disk */
@@ -74,17 +108,19 @@ interface PageWithSurveys {
 }
 
 /**
- * Swaps a page's CMS surveys for the configured local one.
+ * Swaps a page's CMS surveys for the chosen local one, when one is
+ * configured.
  *
  * The viewer's opening position comes from these page-level values, not from
  * the survey, so the survey's own initial position (read from its properties
- * file) is hoisted up too — otherwise the CMS entry's target wins and the
- * survey opens on an empty patch of sky.
+ * file) is hoisted up too — otherwise the CMS entry's target wins and every
+ * local survey opens on the same empty patch of sky.
  */
 export const withLocalSurvey = async <T extends PageWithSurveys>(
-  page: T
+  page: T,
+  requested?: string
 ): Promise<T> => {
-  const local = await getLocalSurveyLayer();
+  const local = await getLocalSurveyLayer(requested);
 
   if (!local) return page;
 
@@ -98,21 +134,44 @@ export const withLocalSurvey = async <T extends PageWithSurveys>(
 };
 
 /**
- * Resolves the local survey to show.
+ * Resolves which local survey to show.
  *
  * Staff deployments serve private processings the CMS knows nothing about, so
  * its survey list cannot be used: its entries name public datasets
  * (`oceancosmosm18/color_gri` and so on) that do not exist in the mirror, and
- * every tile request would 404. HIPS_SURVEY names the survey to show instead.
+ * every tile request would 404.
  *
- * Returns null when nothing local is configured or the survey's `properties`
- * is unreadable, leaving the CMS surveys in place rather than rendering an
- * unexplained empty sky.
+ * `requested` comes from the URL, so it is untrusted and only honoured when
+ * it matches a survey the scan actually found — which also rules out
+ * traversal out of the mirror. Falls back to HIPS_SURVEY, then to the first
+ * survey found, so a viewer always gets imagery rather than an empty sky.
+ *
+ * Returns null when nothing local is configured or nothing was found, leaving
+ * the CMS surveys in place.
  */
-export const getLocalSurveyLayer = async (): Promise<SurveyLayer | null> => {
+export const getLocalSurveyLayer = async (
+  requested?: string
+): Promise<SurveyLayer | null> => {
   const { HIPS_DATA_DIR, HIPS_SURVEY } = env;
 
-  if (!HIPS_DATA_DIR || !HIPS_SURVEY) {
+  if (!HIPS_DATA_DIR) {
+    return null;
+  }
+
+  const surveys = await getSurveyCatalogue();
+
+  const chosen =
+    surveys.find(({ path }) => path === requested) ??
+    surveys.find(({ path }) => path === HIPS_SURVEY) ??
+    surveys[0];
+
+  if (chosen) {
+    return toLayer(chosen.path, chosen.properties);
+  }
+
+  // nothing was discovered, but an explicitly configured survey may still be
+  // readable — a mirror holding a single survey at its root, say
+  if (!HIPS_SURVEY) {
     return null;
   }
 

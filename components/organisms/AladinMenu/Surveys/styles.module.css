@@ -1,0 +1,129 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* no scrollbox of its own: the slideout panel scrolls at full height, and
+     nesting a capped one inside it wasted the panel's space and left the
+     deepest collections stranded behind two competing scrollbars */
+  padding-block-end: 0.5rem;
+}
+
+.filter {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  /* full-bleed across the panel so entries cannot slide past its edges,
+     and the panel's own colour so they cannot show through it */
+  margin-inline: calc(var(--menu-padding, 20px) * -1);
+  padding: 0.5rem var(--menu-padding, 20px);
+  border: 0;
+  border-block-end: 1px solid rgb(255 255 255 / 30%);
+  background-color: var(--neutral95, #1f2121);
+  color: inherit;
+  font: inherit;
+}
+
+.count {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 0.8em;
+}
+
+.collection {
+  border-block-end: 1px solid rgb(255 255 255 / 15%);
+}
+
+.summary {
+  cursor: pointer;
+  padding-block: 0.35rem;
+  font-weight: 600;
+}
+
+.tally {
+  opacity: 0.6;
+  font-weight: 400;
+  font-size: 0.85em;
+}
+
+.list {
+  margin: 0;
+  padding: 0 0 0.35rem;
+  list-style: none;
+}
+
+.survey {
+  display: block;
+  inline-size: 100%;
+  padding: 0.3rem 0.5rem;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  /* survey names are long and similar; showing the whole name matters more
+     than keeping rows to one line */
+  overflow-wrap: anywhere;
+}
+
+.obsTitle {
+  display: block;
+  opacity: 0.6;
+  font-size: 0.85em;
+}
+
+.survey:hover,
+.survey:focus-visible {
+  background-color: rgb(255 255 255 / 15%);
+}
+
+.survey[aria-current="true"] {
+  background-color: rgb(255 255 255 / 25%);
+  font-weight: 600;
+}
+
+/* instant answer to the click, before the overlay mounts */
+.survey[data-pending="true"] {
+  background-color: rgb(255 255 255 / 25%);
+  outline: 1px solid rgb(255 255 255 / 60%);
+}
+
+/* covers viewer and menu alike while the next survey's page is fetched:
+   until it commits, the old view would otherwise sit on screen untouched
+   and a click would appear to do nothing at all */
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(0 0 0 / 80%);
+  color: #fff;
+}
+
+.loadingLabel {
+  margin: 0;
+  font-size: 1.1em;
+  overflow-wrap: anywhere;
+  max-inline-size: 80vw;
+  text-align: center;
+}
+
+.spinner {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 3px solid rgb(255 255 255 / 25%);
+  border-block-start-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

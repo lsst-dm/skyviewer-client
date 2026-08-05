@@ -7,6 +7,7 @@ import {
   ReactNode,
   RefCallback,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -43,6 +44,37 @@ export interface AladinProps {
   debug?: boolean;
 }
 
+/** builds a HiPS for aladin from a survey layer; shared between the mount
+ * initialization and the in-place survey swap on navigation */
+const hipsFactory =
+  (global: A, debug: boolean) =>
+  (
+    { path, maxOrder, imgFormat, tileSize }: SurveyLayer["survey"],
+    { isBase = false } = {}
+  ) => {
+    const hips = global.HiPS(path, {
+      maxOrder,
+      imgFormat,
+      tileSize,
+      successCallback: () => {
+        if (debug) {
+          console.info("Loaded", path);
+        }
+      },
+      errorCallback: () => {
+        if (debug) {
+          console.info("Error loading", path);
+        }
+      },
+    });
+
+    // Only the base layer falls back to the Allsky preview: the preview's
+    // uncovered cells are opaque black (no alpha channel), which is
+    // invisible against the black sky for the base but would black out
+    // everything beneath an overlay.
+    return isBase ? forceHiPSMinOrder(hips, HIPS_MIN_ORDER) : hips;
+  };
+
 export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
   children,
   fovRange,
@@ -65,9 +97,61 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
   const A = useRef<A | null>(null);
   const aladin = useRef<Aladin | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
+  /** which layers the aladin instance is showing, as survey paths — set
+   * when initialization completes, compared on every render thereafter */
+  const appliedSignature = useRef<string | null>(null);
 
   const [hasFocus, setFocus] = useState(false);
   const [isLoading, setLoading] = useState(true);
+
+  // aladin initializes once on mount; navigating to another survey
+  // re-renders this component with new layers but must swap them into the
+  // existing instance through aladin's own API. (Remount-by-key from the
+  // server page is not an option: an explicit key was observed serializing
+  // as null in the flight payload, so client navigations never remounted.)
+  const signature = layers.map(({ survey }) => survey.path).join("|");
+
+  useEffect(() => {
+    const instance = aladin.current;
+    const global = A.current;
+
+    if (
+      isLoading ||
+      !instance ||
+      !global ||
+      // initialization not finished, or nothing actually changed
+      appliedSignature.current === null ||
+      appliedSignature.current === signature
+    ) {
+      return;
+    }
+
+    appliedSignature.current = signature;
+
+    const [base] = [...layers].reverse();
+
+    if (!base) {
+      return;
+    }
+
+    const createHiPS = hipsFactory(global, debug);
+
+    instance.setBaseImageLayer(createHiPS(base.survey, { isBase: true }));
+
+    // the new survey's own opening position, hoisted into the page options;
+    // without moving there the swap leaves the viewer parked on the old
+    // survey's — possibly empty — patch of sky
+    const [ra, dec] = (options.target ?? "").split(" ").map(parseFloat);
+
+    if (Number.isFinite(ra) && Number.isFinite(dec)) {
+      instance.gotoRaDec(ra, dec);
+    }
+
+    if (typeof options.fov === "number") {
+      instance.setFov(options.fov);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature, isLoading]);
 
   const onFocus = () => {
     setFocus(true);
@@ -108,32 +192,7 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
         const [base, ...overlays] = [...layers].reverse();
 
         global.init.then(() => {
-          const createHiPS = (
-            { path, maxOrder, imgFormat, tileSize }: SurveyLayer["survey"],
-            { isBase = false } = {}
-          ) => {
-            const hips = global.HiPS(path, {
-              maxOrder,
-              imgFormat,
-              tileSize,
-              successCallback: () => {
-                if (debug) {
-                  console.info("Loaded", path);
-                }
-              },
-              errorCallback: () => {
-                if (debug) {
-                  console.info("Error loading", path);
-                }
-              },
-            });
-
-            // Only the base layer falls back to the Allsky preview: the
-            // preview's uncovered cells are opaque black (no alpha channel),
-            // which is invisible against the black sky for the base but would
-            // black out everything beneath an overlay.
-            return isBase ? forceHiPSMinOrder(hips, HIPS_MIN_ORDER) : hips;
-          };
+          const createHiPS = hipsFactory(global, debug);
 
           const instance = global.aladin(node, {
             ...staticAladinOptions,
@@ -176,6 +235,7 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
           A.current = global;
           aladin.current = instance;
           ref.current = node;
+          appliedSignature.current = signature;
           setLoading(false);
         });
       });

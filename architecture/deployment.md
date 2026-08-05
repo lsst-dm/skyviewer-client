@@ -53,13 +53,23 @@ serves the files from disk (immutable cache-control on hits, `no-store` on
 whole path below `HIPS_DATA_DIR`, so the mirror need not be shaped like the
 public host.
 
-`HIPS_SURVEY` builds on it for deployments serving imagery the CMS has no
-entry for: set it to a path below `HIPS_DATA_DIR` (e.g.
-`LSSTCam/hips/ltl2/color_gri`) and that one survey replaces the CMS list on
-the explorer. Its display parameters — order, tile format and size, frame,
-title — are read from the HiPS `properties` file by `lib/hips/properties.ts`,
-since no CMS entry supplies them. A path with no readable `properties` falls
-back to the CMS surveys rather than rendering an unexplained empty sky.
+When `HIPS_DATA_DIR` is set, the explorer stops using the CMS survey list
+altogether and shows what is actually on disk. `lib/hips/discover.ts` walks
+the tree and treats any directory holding a `properties` file as a survey;
+it cannot key on depth, because the instrument collections sit at
+`<instrument>/hips/<dataset>/<band>` while the user collections under `u/`
+are whatever depth their owner chose. `lib/hips/local.ts` caches that scan
+(5 minutes — it is a readdir per directory over a shared filesystem) and
+builds the viewer's layer from the chosen survey's `properties`, since no
+CMS entry supplies its order, tile format and size, frame or title.
+
+Which survey is shown comes from `?survey=<path>` so a view can be linked
+to, falling back to `HIPS_SURVEY` and then to the first survey found. The
+requested value is only honoured if the scan found it, which is also what
+stops it escaping the mirror. The picker
+(`components/organisms/AladinMenu/Surveys`) groups by collection — per user
+below `u/`, since one user can own more than a hundred — and filters on the
+full path.
 
 **`hips_initial_ra`/`dec`/`fov` matter.** These surveys cover as little as
 1e-05 of the sky and are a few hundredths of a degree across, so the CMS

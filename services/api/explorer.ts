@@ -25,7 +25,7 @@ const explorerSchema = z
     };
   });
 
-export const getExplorerPage = async (locale: string) => {
+export const getExplorerPage = async (locale: string, survey?: string) => {
   const site = siteFromLocale(locale);
 
   const Query = graphql(`
@@ -59,8 +59,8 @@ export const getExplorerPage = async (locale: string) => {
 
   if (!page) return page;
 
-  // a deployment pinned to a local HiPS shows that survey and nothing else:
+  // a deployment pinned to local HiPS shows those surveys and nothing else:
   // the CMS list names public datasets absent from the mirror, so leaving it
   // in place would offer surveys whose every tile 404s
-  return withLocalSurvey(page);
+  return withLocalSurvey(page, survey);
 };
