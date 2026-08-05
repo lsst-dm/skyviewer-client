@@ -1,0 +1,59 @@
+name: Build and push to GHCR
+
+# Builds the image this fork deploys from and pushes it to
+# ghcr.io/lsst-dm/skyviewer-client.
+#
+# NEXT_PUBLIC_* values are compiled into the client bundle by `next build`, so
+# the image is specific to the host it will be served from: it cannot be
+# promoted between environments the way a normal container can. The values
+# below come from repository variables, and changing where the app is deployed
+# means changing them and rebuilding.
+#
+# The Dockerfile bind-mounts .env during the build and .env is gitignored, so
+# it has to be materialised into the build context first.
+
+"on":
+  workflow_dispatch: {}
+  push:
+    branches:
+      - "main"
+      - "tickets/**"
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: "read"
+      packages: "write"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write the build-time env file
+        env:
+          CRAFT_REVALIDATE_SECRET_TOKEN: ${{ secrets.CRAFT_REVALIDATE_SECRET_TOKEN }}
+          CRAFT_SECRET_TOKEN: ${{ secrets.CRAFT_SECRET_TOKEN }}
+          NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN: ${{ secrets.NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN }}
+        run: |
+          {
+            echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
+            echo "NEXT_PUBLIC_BASE_PATH=${{ vars.NEXT_PUBLIC_BASE_PATH }}"
+            echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}"
+            echo "NEXT_PUBLIC_ASTRO_API_URL=${{ vars.NEXT_PUBLIC_ASTRO_API_URL }}"
+            echo "NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN=${NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN}"
+            echo "CLOUD_ENV=${{ vars.CLOUD_ENV }}"
+            echo "CRAFT_REVALIDATE_SECRET_TOKEN=${CRAFT_REVALIDATE_SECRET_TOKEN}"
+            echo "CRAFT_SECRET_TOKEN=${CRAFT_SECRET_TOKEN}"
+          } > .env
+
+      - uses: lsst-sqre/build-and-push-to-ghcr@v1
+        id: build
+        with:
+          image: ${{ github.repository }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: echo "pushed ghcr.io/${{ github.repository }}:${{ steps.build.outputs.tag }}"

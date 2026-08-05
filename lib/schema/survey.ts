@@ -2,6 +2,7 @@
 
 import { z } from "zod/v4";
 import { env } from "@/env";
+import { withBasePath } from "@/lib/basePath";
 
 const imgFormat: HiPSImageFormat = "png";
 const cooFrame: CooFrame = "ICRS";
@@ -56,13 +57,16 @@ export const surveyImageSchema = z
   .transform(({ fovMin, fovMax, ...output }) => {
     let path =
       env.CLOUD_ENV === "DEV"
-        ? output.path.replace("https://storage.googleapis.com/", "/api/gcs/")
+        ? output.path.replace(
+            "https://storage.googleapis.com/",
+            withBasePath("/api/gcs/")
+          )
         : output.path;
 
     if (env.HIPS_DATA_DIR) {
       path = path.replace(
         "https://images.rubinobservatory.org/hips/",
-        "/api/hips/"
+        withBasePath("/api/hips/")
       );
     }
 

@@ -32,8 +32,17 @@ yarn static:build       # production build (what the Dockerfile runs)
   A hook failure aborts the commit silently if you pipe output — check
   `git log` after committing.
 - Hooks: `commit-msg` → commitlint, `pre-push` → `yarn test`. There is no
-  pre-commit hook (the lint-staged config never fires), and upstream CI runs
-  no lint/tests/typecheck — local checks are the only gate.
+  pre-commit hook (the lint-staged config never fires).
+- **`next build` runs eslint and fails the build on any error**, so a lint
+  error that `tsc` and vitest both pass will still break the image build —
+  run `yarn lint` before pushing, not just `tsc --noEmit` and `yarn test`.
+  `max-len` (80), `dot-notation` and `spaced-comment` are the easy ones to
+  trip. Note eslint reports pre-existing `react-hooks/exhaustive-deps`
+  warnings; only errors fail the build.
+- CI (`.github/workflows/build.yaml`, this fork only) builds on pushes to
+  `main` and `tickets/**` and pushes to `ghcr.io/lsst-dm/skyviewer-client`.
+  It materializes `.env` from repository variables and secrets first, because
+  the Dockerfile bind-mounts it and it is gitignored.
 - eslint works in a normal checkout but aborts if `node_modules` is reached
   through a symlink (duplicate `eslint-plugin-import` copies) — see
   `architecture/ui-and-tooling.md` for the dedupe fix.

@@ -13,6 +13,11 @@ const headers = await jiti.import("./config/headers", { default: true });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // serves the app under a sub-path when it is not at the root of its host.
+  // next prefixes its own routes, links and public/ assets from this; only
+  // hand-built URLs (the service worker registration) need it applied
+  // manually. omitted entirely when unset so root deployments are unchanged
+  ...(env.NEXT_PUBLIC_BASE_PATH ? { basePath: env.NEXT_PUBLIC_BASE_PATH } : {}),
   images: {
     remotePatterns: [
       {

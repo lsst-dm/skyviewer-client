@@ -30,6 +30,14 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_BASE_URL: z.string().url(),
+    /** path the app is mounted under, when it is not served from the root of
+     * its host (e.g. "/skyviewer" behind the RSP ingress). Baked in at build
+     * time like every other NEXT_PUBLIC_ value, so it cannot be changed by
+     * the deployment without rebuilding the image */
+    NEXT_PUBLIC_BASE_PATH: z
+      .string()
+      .regex(/^\/(?!\/)[^?#]*[^/]$/, "must start with / and not end with one")
+      .optional(),
     NEXT_PUBLIC_API_URL: z.string().url(),
     NEXT_PUBLIC_ASTRO_API_URL: z.string().url(),
     NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN: z.string().min(1),
@@ -37,6 +45,7 @@ export const env = createEnv({
   // For Next.js >= 13.4.4, you only need to destructure client variables:
   experimental__runtimeEnv: {
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_ASTRO_API_URL: process.env.NEXT_PUBLIC_ASTRO_API_URL,
     NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN:

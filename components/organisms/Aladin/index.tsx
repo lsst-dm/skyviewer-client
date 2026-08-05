@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { useLocalStorage, useOnClickOutside } from "usehooks-ts";
+import { withBasePath } from "@/lib/basePath";
 import staticAladinOptions from "@/fixtures/defaultAladinOptions";
 import { clientInitialPosition } from "@/lib/helpers";
 import { forceHiPSMinOrder, tameWheelZoom } from "@/lib/aladin/helpers";
@@ -84,10 +85,15 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
         // Serves already-seen HiPS tiles from the browser cache without the
         // revalidation round trip the tile server's cache-control demands;
         // see public/hips-tile-cache-sw.js. Purely an optimization, so
-        // registration failures are ignored.
-        navigator.serviceWorker.register("/hips-tile-cache-sw.js").catch(() => {
-          // noop
-        });
+        // registration failures are ignored. The base path matters twice
+        // over: registering at the wrong path 404s, and a worker registered
+        // outside the app's path has too narrow a scope to see the tile
+        // requests it exists to cache
+        navigator.serviceWorker
+          .register(withBasePath("/hips-tile-cache-sw.js"))
+          .catch(() => {
+            // noop
+          });
       }
 
       import("aladin-lite").then((module) => {
