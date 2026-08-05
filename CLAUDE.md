@@ -6,8 +6,9 @@ site wrapping [aladin-lite](https://github.com/cds-astro/aladin-lite) (pinned
 and an embed mode. Content/config comes from a Craft CMS GraphQL API; sky
 imagery streams directly from `images.rubinobservatory.org` to the browser.
 
-Upstream is `lsst-epo/skyviewer-client`; this fork (`lsst-dm/skyviewer-client`,
-remote `dm`) carries fixes and features on top — see
+Upstream is `lsst-epo/skyviewer-client` (remote `upstream`); this fork
+(`lsst-dm/skyviewer-client`) is `origin` and carries fixes and features on
+top — see
 `architecture/fork-branches.md` for the branch map and the two-clone layout
 before starting work, and the rest of `architecture/` for how the app
 actually works.

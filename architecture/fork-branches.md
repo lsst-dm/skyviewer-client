@@ -9,8 +9,13 @@ Remotes in a working clone:
 
 | Remote | Points at | Role |
 |--------|-----------|------|
-| `dm` | `lsst-dm/skyviewer-client` | the fork. Branches track it and `remote.pushDefault=dm`, so pushes land here. |
-| `origin` | `lsst-epo/skyviewer-client` | upstream; fetch-only in practice. Take upstream changes with an explicit `git fetch origin && git merge origin/main`. |
+| `origin` | `lsst-dm/skyviewer-client` | the fork. Branches track it, so a bare `git push` lands here. |
+| `upstream` | `lsst-epo/skyviewer-client` | upstream; fetch-only in practice. Take upstream changes with an explicit `git fetch upstream && git merge upstream/main`. |
+
+Naming the fork `origin` matters beyond convention: nothing but the git CLI
+honours `remote.pushDefault`, so with any other layout, editors and GUIs
+(VS Code's git integration included) push to `origin` and fail against
+upstream, where we have no write access.
 
 GitHub Actions are **disabled** on `lsst-dm/skyviewer-client`. The fork
 inherited upstream's `build-and-push.yaml`, which triggers on pushes to
@@ -70,7 +75,9 @@ tiles with `cache-control: private, max-age=31536000`.
 
 ## Conventions
 
-- Branch names: `u/mfl/<topic>`.
+- Branch names: `tickets/DM-<number>` for work tracked by a Rubin Jira
+  ticket (the DM convention, and what Phalanx-side work is paired with);
+  `u/mfl/<topic>` for the older fork branches predating that.
 - Conventional commits enforced by commitlint (lower-case subject start).
 - Topic branches are kept rebased-clean (fixes squashed into originating
   commits rather than appended), so expect force-pushes on any that are
