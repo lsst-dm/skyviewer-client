@@ -3,6 +3,7 @@ import { isAbsolute, join, normalize, extname, basename, dirname } from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
 import { withUniqueCreatorDid } from "@/lib/hips/properties";
+import { createTileCache } from "@/lib/hips/tileCache";
 
 const CONTENT_TYPES: Record<string, string> = {
   ".webp": "image/webp",
@@ -11,6 +12,21 @@ const CONTENT_TYPES: Record<string, string> = {
   ".jpeg": "image/jpeg",
   ".fits": "application/fits",
 };
+
+// every viewer's tile traffic goes through this route, so without a cache
+// each request is a fresh read from networked disk. Module-level: one cache
+// per server process, shared across requests
+const cache = createTileCache(env.HIPS_TILE_CACHE_BYTES ?? 0);
+
+const respond = (relative: string, body: Buffer) =>
+  new NextResponse(body, {
+    headers: {
+      "Content-Type":
+        CONTENT_TYPES[extname(relative)] ?? "application/octet-stream",
+      // tiles at a given path are immutable; new processings get new paths
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
 
 /**
  * Serves HiPS survey files from the local mirror in HIPS_DATA_DIR.
@@ -28,6 +44,12 @@ export async function GET(
   const relative = normalize(params.path.filter(Boolean).join("/"));
   if (relative.startsWith("..") || isAbsolute(relative)) {
     return new NextResponse(null, { status: 404 });
+  }
+
+  const cached = cache.get(relative);
+
+  if (cached) {
+    return respond(relative, cached);
   }
 
   try {
@@ -50,14 +72,9 @@ export async function GET(
       );
     }
 
-    return new NextResponse(body, {
-      headers: {
-        "Content-Type":
-          CONTENT_TYPES[extname(relative)] ?? "application/octet-stream",
-        // tiles at a given path are immutable; new processings get new paths
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
+    cache.set(relative, body);
+
+    return respond(relative, body);
   } catch {
     // never cache local misses: the mirror may still be filling up, and a
     // cached 404 would hide a tile that has since arrived on disk

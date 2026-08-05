@@ -20,6 +20,10 @@ export const env = createEnv({
      * below it mirror the remote host's, so a mirror of the public surveys
      * contains a "hips" subdirectory */
     HIPS_DATA_DIR: z.string().min(1).optional(),
+    /** byte cap for the in-memory FIFO cache of served tiles; unset or 0
+     * disables it. The pod carries all tile traffic itself, so without this
+     * every tile is re-read from networked disk on every request */
+    HIPS_TILE_CACHE_BYTES: z.coerce.number().int().nonnegative().optional(),
     /** path, relative to HIPS_DATA_DIR, of the survey to show when the URL
      * does not name one — e.g. "LSSTCam/hips/ltl2/color_gri". Without it the
      * first survey discovered is shown instead. Requires HIPS_DATA_DIR */
