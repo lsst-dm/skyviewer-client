@@ -46,10 +46,28 @@ values are recoverable from the deployed bundle's JS chunks.
 
 `u/mfl/local-hips-data` adds `HIPS_DATA_DIR`: when set,
 `lib/schema/survey.ts` rewrites survey paths from
-`images.rubinobservatory.org/hips/` to `/api/hips/`, and
+`images.rubinobservatory.org/` to `/api/hips/`, and
 [app/api/hips/[...path]/route.ts](../app/api/hips/%5B...path%5D/route.ts)
 serves the files from disk (immutable cache-control on hits, `no-store` on
-404s so a still-filling mirror never poisons caches). The mirror itself
+404s so a still-filling mirror never poisons caches). The URL carries the
+whole path below `HIPS_DATA_DIR`, so the mirror need not be shaped like the
+public host.
+
+`HIPS_SURVEY` builds on it for deployments serving imagery the CMS has no
+entry for: set it to a path below `HIPS_DATA_DIR` (e.g.
+`LSSTCam/hips/ltl2/color_gri`) and that one survey replaces the CMS list on
+the explorer. Its display parameters — order, tile format and size, frame,
+title — are read from the HiPS `properties` file by `lib/hips/properties.ts`,
+since no CMS entry supplies them. A path with no readable `properties` falls
+back to the CMS surveys rather than rendering an unexplained empty sky.
+
+**`hips_initial_ra`/`dec`/`fov` matter.** These surveys cover as little as
+1e-05 of the sky and are a few hundredths of a degree across, so the CMS
+defaults (a fixed target, a 60° field, a 2° zoom floor) open on empty sky
+with no way to zoom in far enough to find the imagery. They do *not* declare
+`hips_order_min`, so the forced floor of 3 is still needed.
+
+The mirror itself
 (~55 GB, 134k files) is built by `mirror_hips.py` (lives with the data, e.g.
 `~/lsst/skyviewer-data`): enumerates the exact tile set from each survey's
 `Moc.fits`, downloads with per-file verification (Content-Length + RIFF

@@ -4,6 +4,7 @@ import { graphql } from "@/gql";
 import queryAPI from "@/services/api/client";
 import { siteFromLocale } from "@/lib/i18n/site";
 import { surveyLayerSchema } from "@/lib/schema/survey";
+import { withLocalSurvey } from "@/lib/hips/local";
 import { ra, dec, fov } from "@/lib/schema/astro";
 
 const explorerSchema = z
@@ -54,5 +55,12 @@ export const getExplorerPage = async (locale: string) => {
 
   if (!data || !data.explorerEntries) return;
 
-  return explorerSchema.safeParse(data.explorerEntries[0])?.data;
+  const page = explorerSchema.safeParse(data.explorerEntries[0])?.data;
+
+  if (!page) return page;
+
+  // a deployment pinned to a local HiPS shows that survey and nothing else:
+  // the CMS list names public datasets absent from the mirror, so leaving it
+  // in place would offer surveys whose every tile 404s
+  return withLocalSurvey(page);
 };

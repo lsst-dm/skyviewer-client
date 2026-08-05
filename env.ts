@@ -16,9 +16,19 @@ export const env = createEnv({
     CRAFT_REVALIDATE_SECRET_TOKEN: z.string().min(1),
     CRAFT_SECRET_TOKEN: z.string().min(1),
     /** absolute path to a local mirror of the HiPS surveys; when set, survey
-     * tiles are served from this directory instead of the remote host. mirrors
-     * the site root, so it must contain a "hips" subdirectory */
+     * tiles are served from this directory instead of the remote host. paths
+     * below it mirror the remote host's, so a mirror of the public surveys
+     * contains a "hips" subdirectory */
     HIPS_DATA_DIR: z.string().min(1).optional(),
+    /** path, relative to HIPS_DATA_DIR, of a single HiPS to show instead of
+     * the surveys the CMS advertises — e.g. "LSSTCam/hips/ltl2/color_gri".
+     * For deployments serving private processings the CMS has no entry for;
+     * requires HIPS_DATA_DIR */
+    HIPS_SURVEY: z
+      .string()
+      .min(1)
+      .regex(/^[^/][^\0]*[^/]$/, "must be relative and not end with a slash")
+      .optional(),
     PLAUSIBLE_DOMAIN: z.string().min(1).optional(),
     /** if enabled, will add a forced Cache-Control header to RSC responses */
     NEXT_RSC_CACHE_CONTROL: COERCED_BOOLEAN.optional().default(true),

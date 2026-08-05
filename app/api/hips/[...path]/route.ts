@@ -30,7 +30,11 @@ export async function GET(
   }
 
   try {
-    const body = await readFile(join(env.HIPS_DATA_DIR, "hips", relative));
+    // the URL carries the whole path below HIPS_DATA_DIR, including the
+    // "hips" segment a mirror of the public host has. Injecting that segment
+    // here instead would make every mirror have to be shaped like the public
+    // one, which the surveys staged at USDF are not
+    const body = await readFile(join(env.HIPS_DATA_DIR, relative));
 
     return new NextResponse(body, {
       headers: {
