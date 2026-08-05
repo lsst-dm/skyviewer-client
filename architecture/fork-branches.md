@@ -1,6 +1,22 @@
 # Fork branch map
 
-Upstream: `lsst-epo/skyviewer-client`. Fork: `mfisherlevine/skyviewer-client`.
+Upstream: `lsst-epo/skyviewer-client`. Fork: `lsst-dm/skyviewer-client`.
+
+The fork was made from `lsst-epo` directly, so upstream stays the parent and
+gets the fork count.
+
+Remotes in a working clone:
+
+| Remote | Points at | Role |
+|--------|-----------|------|
+| `dm` | `lsst-dm/skyviewer-client` | the fork. Branches track it and `remote.pushDefault=dm`, so pushes land here. |
+| `origin` | `lsst-epo/skyviewer-client` | upstream; fetch-only in practice. Take upstream changes with an explicit `git fetch origin && git merge origin/main`. |
+
+GitHub Actions are **disabled** on `lsst-dm/skyviewer-client`. The fork
+inherited upstream's `build-and-push.yaml`, which triggers on pushes to
+`main` and deploys to lsst-epo's GCP projects; disabling Actions keeps it
+dormant. Re-enabling Actions (e.g. to build for USDF) re-arms that workflow,
+so replace or delete it in the same change.
 
 As of August 2026, **every topic branch has been merged into the fork's
 `main`** (individual `--no-ff` merge commits), after a per-branch review pass
@@ -12,7 +28,7 @@ build on what is already merged there.
 
 | Branch | Base | Contents |
 |--------|------|----------|
-| `main` | upstream `main` | all topic branches merged; the deployed branch |
+| `main` | upstream `main` | all topic branches merged |
 | `u/mfl/full-sky-zoom` | upstream `main` | the four upstream-facing fixes (below) |
 | `u/mfl/earth-scale` | upstream `main` | Earth-scale comparison feature (one commit) |
 | `u/mfl/local-hips-data` | upstream `main` | `HIPS_DATA_DIR` local tile mirror serving (one commit) |
@@ -22,9 +38,6 @@ build on what is already merged there.
 | `u/mfl/agent-docs-updated` | `u/mfl/agent-docs` | same docs plus this post-merge update; the merged version. Upstream can take either |
 | `u/mfl/dedupe-eslint-plugin-import` | upstream `main` | resolutions pin collapsing the two installed copies of `eslint-plugin-import` to one |
 | `u/mfl/sky-curvature` | fork `main` | auto coordinate grid + Earth globe, both keyed on one "is the sky curved?" threshold (two commits) |
-
-(A couple of additional remote branches are historical pre-merge integration
-branches, superseded by `main`; they are not upstream-relevant.)
 
 ## The four fixes on `u/mfl/full-sky-zoom`
 

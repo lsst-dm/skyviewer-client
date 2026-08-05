@@ -1,4 +1,4 @@
-# skyviewer-client (mfisherlevine fork)
+# skyviewer-client (lsst-dm fork)
 
 Rubin Observatory's public **Skyviewer** (skyviewer.app): a Next.js app-router
 site wrapping [aladin-lite](https://github.com/cds-astro/aladin-lite) (pinned
@@ -6,9 +6,11 @@ site wrapping [aladin-lite](https://github.com/cds-astro/aladin-lite) (pinned
 and an embed mode. Content/config comes from a Craft CMS GraphQL API; sky
 imagery streams directly from `images.rubinobservatory.org` to the browser.
 
-Upstream is `lsst-epo/skyviewer-client`. This fork carries fixes and features
-on top — see `architecture/fork-branches.md` for the branch map before
-starting work, and the rest of `architecture/` for how the app actually works.
+Upstream is `lsst-epo/skyviewer-client`; this fork (`lsst-dm/skyviewer-client`,
+remote `dm`) carries fixes and features on top — see
+`architecture/fork-branches.md` for the branch map and the two-clone layout
+before starting work, and the rest of `architecture/` for how the app
+actually works.
 
 ## Commands
 
