@@ -121,6 +121,25 @@ const asCooFrame = (value?: string): CooFrame | undefined => {
   return undefined;
 };
 
+/**
+ * Rewrites a properties file's creator_did to the given value, preserving
+ * everything else.
+ *
+ * The staged surveys share a handful of templated creator_did values, but
+ * the HiPS standard requires it to uniquely identify a dataset — and aladin
+ * takes it at its word: a HiPS's cache id IS its creator_did, and adding a
+ * HiPS whose id is already cached silently adopts the cached survey's
+ * options instead of its own. Serving each survey a unique value removes
+ * the whole collision class at the one place we control the data.
+ */
+export const withUniqueCreatorDid = (source: string, did: string): string => {
+  const line = `creator_did              = ${did}`;
+  const replaced = source.replace(/^[ \t]*creator_did[ \t]*=.*$/m, line);
+
+  // no creator_did to replace: prepend one
+  return replaced === source ? `${line}\n${source}` : replaced;
+};
+
 export const parseHiPSProperties = (source: string): HiPSProperties => {
   const fields = parseFields(source);
 

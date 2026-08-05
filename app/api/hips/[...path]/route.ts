@@ -1,7 +1,8 @@
 import { readFile } from "fs/promises";
-import { isAbsolute, join, normalize, extname } from "path";
+import { isAbsolute, join, normalize, extname, basename, dirname } from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
+import { withUniqueCreatorDid } from "@/lib/hips/properties";
 
 const CONTENT_TYPES: Record<string, string> = {
   ".webp": "image/webp",
@@ -34,7 +35,20 @@ export async function GET(
     // "hips" segment a mirror of the public host has. Injecting that segment
     // here instead would make every mirror have to be shaped like the public
     // one, which the surveys staged at USDF are not
-    const body = await readFile(join(env.HIPS_DATA_DIR, relative));
+    let body = await readFile(join(env.HIPS_DATA_DIR, relative));
+
+    if (basename(relative) === "properties") {
+      // the staged surveys share templated creator_did values, and aladin
+      // uses creator_did as a HiPS's cache identity: colliding surveys
+      // silently adopt each other's options. Serve each survey a value
+      // derived from its path, which is unique by construction
+      body = Buffer.from(
+        withUniqueCreatorDid(
+          body.toString("utf8"),
+          `ivo://rubin.local/${dirname(relative)}`
+        )
+      );
+    }
 
     return new NextResponse(body, {
       headers: {

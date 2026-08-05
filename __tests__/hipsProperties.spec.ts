@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseHiPSProperties } from "@/lib/hips/properties";
+import {
+  parseHiPSProperties,
+  withUniqueCreatorDid,
+} from "@/lib/hips/properties";
 
 // trimmed from an actual survey under /sdf/group/rubin/shared/hips_views
 const example = `
@@ -78,5 +81,25 @@ describe(parseHiPSProperties, () => {
 
     expect(result.title).toBe("a = b");
     expect(result.cooFrame).toBe("galactic");
+  });
+});
+
+describe(withUniqueCreatorDid, () => {
+  it("replaces the existing creator_did and nothing else", () => {
+    const result = withUniqueCreatorDid(example, "ivo://rubin.local/a/b");
+
+    expect(result).toContain(
+      "creator_did              = ivo://rubin.local/a/b"
+    );
+    expect(result).not.toContain("ivo://CDS/P/rubin/ltl2");
+    // the rest of the file is untouched
+    expect(parseHiPSProperties(result)).toEqual(parseHiPSProperties(example));
+  });
+
+  it("adds a creator_did when the file has none", () => {
+    const result = withUniqueCreatorDid("hips_order = 9\n", "ivo://x/y");
+
+    expect(result).toContain("creator_did              = ivo://x/y");
+    expect(parseHiPSProperties(result).maxOrder).toBe(9);
   });
 });
