@@ -4,10 +4,11 @@ What this fork has to offer `lsst-epo/skyviewer-client`, why, and the exact
 text to send with it. Companion to `fork-branches.md`, which maps the
 branches themselves.
 
-**Status: prepared 2026-08-06, not yet filed.** Every branch below is built
-on `upstream/main` and verified to cherry-pick cleanly. When a PR is opened,
-put its URL in the table so this file becomes the record of what was offered
-and what happened to it.
+**Status: the twelve fixes were filed 2026-08-06** after upstream said they
+would welcome them; all reported `MERGEABLE` on opening. The three feature
+branches (13–15) are deliberately held back — they are product decisions, and
+nobody asked for them. Record outcomes in the table as they land, so this
+file stays the answer to "what did we offer and what happened to it".
 
 ## How a change gets here
 
@@ -46,28 +47,32 @@ is labelled a product decision that belongs to them, not us.
 
 ## The set
 
-| #   | Branch                  | Title                                                                       | Notes                             |
-| --- | ----------------------- | --------------------------------------------------------------------------- | --------------------------------- |
-| 1   | `up/hips-order-min`     | fix: keep partial-coverage HiPS visible at wide fields of view              | closes their #396                 |
-| 2   | `up/embed-allow-attr`   | fix: use the allow attribute in generated embed iframes                     | one line                          |
-| 3   | `up/aladin-layers-prop` | fix: stop the aladin organism mutating its layers prop                      | hand-ported                       |
-| 4   | `up/aladin-saved-opts`  | fix: stop saved aladin options merging into a stale copy                    |                                   |
-| 5   | `up/wheel-zoom`         | fix: make trackpad pinch and scroll zoom at a usable speed                  | includes 1                        |
-| 6   | `up/tile-sw-cache`      | perf: serve already-seen HiPS tiles from a service worker cache             | stopgap for issue B               |
-| 7   | `up/lint-hygiene`       | fix: make yarn lint check what it claims to                                 | conflicts with 3, 4               |
-| 8   | `up/eslint-dedupe`      | chore: dedupe eslint-plugin-import so eslint resolves it uniquely           |                                   |
-| 9   | `up/dockerignore`       | build: limit the docker build context                                       |                                   |
-| 10  | `up/docker-selfcontain` | fix: make the Docker image self-contained for standalone deployment         |                                   |
-| 11  | `up/gitignore-tsbuild`  | chore: ignore typescript incremental build state                            | three lines                       |
-| 12  | `up/env-token-optional` | fix: stop requiring the astro objects token at runtime                      | judgement call                    |
-| 13  | `up/full-sky-zoom`      | feat: allow zooming out to see the whole sky                                | **product decision**, includes 1  |
-| 14  | `up/earth-scale`        | feat: add an earth-scale comparison for the current field of view           | **product decision**              |
-| 15  | `up/sky-curvature`      | feat: show the coordinate grid and an Earth globe when the sky looks curved | **product decision**, includes 14 |
+| PR                                                            | Branch                  | Title                                                                       | Notes                                              |
+| ------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------- | -------------------------------------------------- |
+| [#398](https://github.com/lsst-epo/skyviewer-client/pull/398) | `up/hips-order-min`     | fix: keep partial-coverage HiPS visible at wide fields of view              | answers their #396                                 |
+| [#399](https://github.com/lsst-epo/skyviewer-client/pull/399) | `up/embed-allow-attr`   | fix: use the allow attribute in generated embed iframes                     | one line                                           |
+| [#400](https://github.com/lsst-epo/skyviewer-client/pull/400) | `up/aladin-layers-prop` | fix: stop the aladin organism mutating its layers prop                      | hand-ported                                        |
+| [#401](https://github.com/lsst-epo/skyviewer-client/pull/401) | `up/aladin-saved-opts`  | fix: stop saved aladin options merging into a stale copy                    |                                                    |
+| [#402](https://github.com/lsst-epo/skyviewer-client/pull/402) | `up/wheel-zoom`         | fix: make trackpad pinch and scroll zoom at a usable speed                  | contains #398                                      |
+| [#403](https://github.com/lsst-epo/skyviewer-client/pull/403) | `up/tile-sw-cache`      | perf: serve already-seen HiPS tiles from a service worker cache             | stopgap for #397                                   |
+| [#404](https://github.com/lsst-epo/skyviewer-client/pull/404) | `up/lint-hygiene`       | fix: make yarn lint check what it claims to                                 | conflicts with #400, #401                          |
+| [#405](https://github.com/lsst-epo/skyviewer-client/pull/405) | `up/eslint-dedupe`      | chore: dedupe eslint-plugin-import so eslint resolves it uniquely           |                                                    |
+| [#406](https://github.com/lsst-epo/skyviewer-client/pull/406) | `up/dockerignore`       | build: limit the docker build context                                       |                                                    |
+| [#407](https://github.com/lsst-epo/skyviewer-client/pull/407) | `up/docker-selfcontain` | fix: make the Docker image self-contained for standalone deployment         | least confident                                    |
+| [#408](https://github.com/lsst-epo/skyviewer-client/pull/408) | `up/gitignore-tsbuild`  | chore: ignore typescript incremental build state                            | three lines                                        |
+| [#409](https://github.com/lsst-epo/skyviewer-client/pull/409) | `up/env-token-optional` | fix: stop requiring the astro objects token at runtime                      | judgement call                                     |
+| not filed                                                     | `up/full-sky-zoom`      | feat: allow zooming out to see the whole sky                                | **product decision**, contains `up/hips-order-min` |
+| not filed                                                     | `up/earth-scale`        | feat: add an earth-scale comparison for the current field of view           | **product decision**                               |
+| not filed                                                     | `up/sky-curvature`      | feat: show the coordinate grid and an Earth globe when the sky looks curved | **product decision**, contains `up/earth-scale`    |
 
-Ordering that matters: 7 reformats `components/organisms/Aladin/index.tsx`,
-so it conflicts with 3 and 4 — whichever lands second needs a rebase, in
-either direction. 5 and 13 both contain 1; once 1 merges they reduce to a
-single commit each.
+The three unfiled branches stay on the fork, ready, in case upstream ever asks
+for them. Offering a feature nobody requested is a different act from offering
+a bug fix, and worth keeping that way.
+
+Ordering that matters: #404 reformats `components/organisms/Aladin/index.tsx`,
+so it conflicts with #400 and #401 — whichever lands second needs a rebase, in
+either direction, and the PR says we will do it. #402 contains #398; once #398
+merges it reduces to a single commit.
 
 ## Shared preamble
 
@@ -325,18 +330,21 @@ Skyviewer, and that call is entirely yours.
 
 ---
 
-## Two issues to file instead of PRs (no patch to send)
+## The data-side asks (no patch to send)
+
+Neither is a repo change, and each would obsolete a workaround this fork
+carries — which is why they are worth more than any of the PRs above.
 
 **A. Add `hips_order_min = 3` to the HiPS `properties` files.**
-Generated by `lsst.pipe.tasks.hips.GenerateHipsTask`. Declaring it at
-generation time makes PR 1 and their #396 unnecessary for good, in every
-client, not just this one.
+Generated by `lsst.pipe.tasks.hips.GenerateHipsTask`, so this belongs to the
+pipelines side rather than to `lsst-epo/skyviewer-client` — **already reported
+there by Merlin**, and deliberately not duplicated here. Declaring it at
+generation time would make #398 and their #396 unnecessary for good, in every
+client rather than just this one.
 
-**B. Serve tiles with a long-lived `cache-control`.**
+**B. Serve tiles with a long-lived `cache-control`.** Filed as
+[lsst-epo/skyviewer-client#397](https://github.com/lsst-epo/skyviewer-client/issues/397).
 Currently `private, max-age=0`, forcing a ~300 ms revalidation per tile per
 session. Tiles are immutable in practice, so `max-age=31536000` would let
-PR 6's service worker be deleted.
-
-Both are data/infrastructure changes rather than repo changes, and both would
-obsolete a workaround this fork carries — which is why they are worth more
-than any of the PRs above.
+#403's service worker be deleted. The issue notes the bucket may not be theirs
+to change and asks for a pointer if so.
