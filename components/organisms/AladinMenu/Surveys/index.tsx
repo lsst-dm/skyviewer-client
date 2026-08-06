@@ -7,11 +7,11 @@ import Submenu from "../Submenu";
 import styles from "./styles.module.css";
 
 /** the shape the page passes down, kept to what the picker renders so the
- * whole properties record is not serialised into the client bundle */
+ * whole properties record is not serialised into the client bundle. Every
+ * field here is paid for more than a thousand times over, so the headings and
+ * the per-survey labels are both derived from `path` rather than sent */
 export interface SurveyChoice {
   path: string;
-  group: string;
-  label: string;
   title?: string;
 }
 
@@ -20,35 +20,82 @@ interface SurveysMenuProps {
   selected?: string;
 }
 
-/**
- * A survey collection, and the surveys in it.
- *
- * The user collections hold the overwhelming majority of surveys and are
- * grouped per user rather than lumped under one "u" heading, which would put
- * a hundred-odd entries behind a single control.
- */
+/** A survey collection, named by the path segments its surveys share. */
 interface Collection {
   name: string;
   surveys: Array<SurveyChoice>;
 }
 
-const collectionOf = ({ group, label }: SurveyChoice): string =>
-  group === "u" ? `u/${label.split("/")[0]}` : group;
+/**
+ * How many surveys a collection may hold before it is split a level deeper.
+ *
+ * Loose on purpose: splitting is not free either, and a tighter bound trades
+ * one long list for a wall of two-entry headings — at 60 the mirror breaks
+ * into 414 collections, 168 of them holding a single survey, against 319 and
+ * 92 here.
+ */
+const MAX_COLLECTION = 100;
 
-const groupSurveys = (surveys: Array<SurveyChoice>): Array<Collection> => {
+/** what distinguishes a survey within its collection: the rest of its path */
+const within = (path: string, collection: string): string =>
+  path.startsWith(`${collection}/`) ? path.slice(collection.length + 1) : path;
+
+/**
+ * Splits surveys into collections named by their first `depth` path segments.
+ *
+ * A survey with nothing to spare below the split point is named by its parent
+ * instead, so a survey never ends up as a collection of one holding itself.
+ */
+const split = (
+  surveys: Array<SurveyChoice>,
+  depth: number
+): Map<string, Array<SurveyChoice>> => {
   const collections = new Map<string, Array<SurveyChoice>>();
 
   for (const survey of surveys) {
-    const name = collectionOf(survey);
+    const segments = survey.path.split("/");
+    const name = segments
+      .slice(0, Math.min(depth, segments.length - 1) || 1)
+      .join("/");
 
     collections.set(name, [...(collections.get(name) ?? []), survey]);
   }
 
-  return Array.from(collections, ([name, entries]) => ({
-    name,
-    surveys: entries,
-  })).sort((a, b) => a.name.localeCompare(b.name));
+  return collections;
 };
+
+/**
+ * Groups surveys for the picker, subdividing anything too long to scan.
+ *
+ * The tree is lopsided, so no single split depth works: two segments leaves
+ * `LSSTCam/hips` holding hundreds while `LSSTCam/filtered` holds four, and
+ * one user owns more surveys than every instrument collection combined.
+ * Splitting only where a collection is oversized keeps the shallow parts of
+ * the tree shallow and pushes the crowded parts apart.
+ *
+ * Terminates because `depth` rises towards the longest path in the set;
+ * surveys sharing every segment stay together however many of them there are.
+ */
+const groupSurveys = (
+  surveys: Array<SurveyChoice>,
+  depth = 2
+): Array<Collection> =>
+  Array.from(split(surveys, depth), ([name, entries]): Array<Collection> => {
+    const deepest = Math.max(
+      ...entries.map(({ path }) => path.split("/").length)
+    );
+
+    if (entries.length <= MAX_COLLECTION || depth >= deepest) {
+      return [{ name, surveys: entries }];
+    }
+
+    const deeper = groupSurveys(entries, depth + 1);
+
+    // a split that separated nothing only lengthens the heading
+    return deeper.length > 1 ? deeper : [{ name, surveys: entries }];
+  })
+    .flat()
+    .sort((a, b) => a.name.localeCompare(b.name));
 
 const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
   const router = useRouter();
@@ -100,9 +147,9 @@ const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
     });
   };
 
-  const pendingLabel = pendingPath
-    ? surveys.find(({ path }) => path === pendingPath)?.label ?? pendingPath
-    : null;
+  // the overlay names the survey being loaded by its path, which is what the
+  // user just clicked and what the address bar is about to show
+  const pendingLabel = pendingPath;
 
   // grouping never drops entries, so the collections' tally is the number
   // of surveys that matched the filter
@@ -139,7 +186,7 @@ const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
               {name} <span className={styles.tally}>{entries.length}</span>
             </summary>
             <ul className={styles.list}>
-              {entries.map(({ path, label, title }) => (
+              {entries.map(({ path, title }) => (
                 <li key={path}>
                   <button
                     type="button"
@@ -151,8 +198,10 @@ const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
                   >
                     {/* the path-derived label leads because it is unique:
                         re-stagings of a survey share their obs_title, so a
-                        title-first list shows runs of identical rows */}
-                    {label}
+                        title-first list shows runs of identical rows. Only
+                        the part below the heading, which is already on
+                        screen a few pixels above */}
+                    {within(path, name)}
                     {title && <span className={styles.obsTitle}>{title}</span>}
                   </button>
                 </li>

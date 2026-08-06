@@ -120,17 +120,51 @@ the tree and treats any directory holding a `properties` file as a survey;
 it cannot key on depth, because the instrument collections sit at
 `<instrument>/hips/<dataset>/<band>` while the user collections under `u/`
 are whatever depth their owner chose. `lib/hips/local.ts` caches that scan
-(5 minutes — it is a readdir per directory over a shared filesystem) and
-builds the viewer's layer from the chosen survey's `properties`, since no
-CMS entry supplies its order, tile format and size, frame or title.
+and builds the viewer's layer from the chosen survey's `properties`, since
+no CMS entry supplies its order, tile format and size, frame or title.
+
+**The depth bound is a runaway guard, not a description of the tree**, and
+treating it as one is how surveys go missing. It was 6 path segments, which
+matched the mirror when it was written — but newer stagings nest a run
+collection and a per-flavour directory into the path, putting DP2 at 8 and 9:
+
+```
+LSSTCam/DRP/DP2/pretty/dp2f75k/color_gri                      (6, listed)
+LSSTCam/runs/DRP/DP2/pretty/v30_0_8_rc4/dp2x1/color_gri       (8, was not)
+LSSTCam/runs/DRP/DP2/pretty/v30_0_8_rc4/dp2x1/epo/color_gri   (9, was not)
+```
+
+The walk halted at `v30_0_8_rc4` and never saw the survey below it, hiding
+1045 of the 1624 surveys staged on usdfdev — every `LSSTCam/runs` staging,
+and the `epo/` webp variant of everything else. The bound is now 14, with
+room above the deepest thing on disk.
+
+**Reading the `properties` files is what a scan costs, not the walk.** The
+walk stops at every survey root, so covering the whole tree rather than six
+levels is 3.4k readdirs instead of 1.6k — half a second either way on
+usdfdev. But the scan then reads each survey's `properties`, and the first
+time that filesystem is asked for a given small file it takes a few hundred
+milliseconds however much concurrency is thrown at it: a cold scan of 1624
+surveys measured **121 s**, against 0.6 s once warm. So `getSurveyCatalogue`
+
+- starts its first scan when the server boots, not when the first page view
+  asks for one;
+- is single-flight, so requests arriving during a cold scan join it instead
+  of each starting their own;
+- serves the previous list while a scan past its 5 minute TTL refreshes
+  behind the request, since the list only changes when someone stages a
+  survey.
 
 Which survey is shown comes from `?survey=<path>` so a view can be linked
 to, falling back to `HIPS_SURVEY` and then to the first survey found. The
 requested value is only honoured if the scan found it, which is also what
 stops it escaping the mirror. The picker
-(`components/organisms/AladinMenu/Surveys`) groups by collection — per user
-below `u/`, since one user can own more than a hundred — and filters on the
-full path.
+(`components/organisms/AladinMenu/Surveys`) filters on the full path and
+groups by shared path prefix, subdividing only collections above
+`MAX_COLLECTION`: the tree is lopsided — `LSSTCam/hips` holds 590 surveys
+and `LSSTCam/filtered` four, and one user owns more than every instrument
+collection combined — so any single split depth leaves either a wall of
+entries behind one control or a wall of two-entry headings.
 
 **`hips_initial_ra`/`dec`/`fov` matter.** These surveys cover as little as
 1e-05 of the sky and are a few hundredths of a degree across, so the CMS

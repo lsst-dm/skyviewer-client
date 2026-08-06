@@ -29,6 +29,33 @@ const CATALOGUE_TTL_MS = 5 * 60 * 1000;
 
 let catalogue: { at: number; surveys: DiscoveredSurvey[] } | null = null;
 
+/** the scan in progress, if any */
+let scanning: Promise<DiscoveredSurvey[]> | null = null;
+
+/**
+ * Runs a scan, or joins the one already running.
+ *
+ * Single-flight because a cold scan is slow enough to overlap with itself
+ * many times over: the walk is half a second, but reading each survey's
+ * `properties` costs a few hundred milliseconds per file the first time the
+ * shared filesystem is asked for it, which is minutes across the whole
+ * mirror. Without this, every request arriving during that window would
+ * start its own full scan.
+ */
+const scan = (root: string): Promise<DiscoveredSurvey[]> => {
+  scanning ??= discoverSurveys(root)
+    .then((surveys) => {
+      catalogue = { at: Date.now(), surveys };
+
+      return surveys;
+    })
+    .finally(() => {
+      scanning = null;
+    });
+
+  return scanning;
+};
+
 /**
  * Every survey staged under HIPS_DATA_DIR, cached briefly.
  *
@@ -42,15 +69,22 @@ export const getSurveyCatalogue = async (): Promise<DiscoveredSurvey[]> => {
     return [];
   }
 
-  if (catalogue && Date.now() - catalogue.at < CATALOGUE_TTL_MS) {
-    return catalogue.surveys;
+  // nothing scanned yet, so there is no choice but to wait — but on the scan
+  // already started at boot, not a new one
+  if (!catalogue) {
+    return scan(HIPS_DATA_DIR);
   }
 
-  const surveys = await discoverSurveys(HIPS_DATA_DIR);
+  if (Date.now() - catalogue.at >= CATALOGUE_TTL_MS) {
+    // refresh behind the request rather than in front of it: the list only
+    // changes when someone stages a survey, so a few minutes stale is a much
+    // better answer than a page that hangs for the length of a cold scan
+    scan(HIPS_DATA_DIR).catch(() => {
+      // an unreadable mirror leaves the previous catalogue in place
+    });
+  }
 
-  catalogue = { at: Date.now(), surveys };
-
-  return surveys;
+  return catalogue.surveys;
 };
 
 /** builds the viewer's layer for one survey found on disk */
@@ -186,3 +220,13 @@ export const getLocalSurveyLayer = async (
     return null;
   }
 };
+
+// Start scanning when the server starts rather than when the first page view
+// asks, so that view waits on a scan already in flight instead of beginning
+// one. It buys nothing on a warm filesystem cache and minutes on a cold one,
+// which is what a freshly scheduled pod gets.
+if (env.HIPS_DATA_DIR) {
+  scan(env.HIPS_DATA_DIR).catch(() => {
+    // a mirror that is not readable yet is retried on the first request
+  });
+}

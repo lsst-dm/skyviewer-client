@@ -54,10 +54,8 @@ const ExplorerPage: FC<ExplorerProps> = async ({
           {catalogue.length > 1 && (
             <SurveysMenu
               selected={selected}
-              surveys={catalogue.map(({ path, group, label, properties }) => ({
+              surveys={catalogue.map(({ path, properties }) => ({
                 path,
-                group,
-                label,
                 title: properties.title,
               }))}
             />

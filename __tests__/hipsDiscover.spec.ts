@@ -22,6 +22,10 @@ beforeAll(async () => {
   // a user collection at a depth nobody declared in advance
   await survey("u/yusra/DM-54165/DM-54125-hips/color_gri");
 
+  // newer instrument stagings nest a run collection and a per-flavour
+  // directory into the path, putting DP2 four levels below the old layout
+  await survey("LSSTCam/runs/DRP/DP2/pretty/v30_0_8_rc4/dp2x1/epo/color_gri");
+
   // tile directories below a survey root must not be walked into or reported
   await mkdir(join(root, "LSSTCam/hips/ltl2/color_gri/Norder3/Dir0"), {
     recursive: true,
@@ -32,7 +36,7 @@ beforeAll(async () => {
   );
 
   // a directory that merely looks like a collection but holds no survey
-  await mkdir(join(root, "LSSTCam/runs/empty"), { recursive: true });
+  await mkdir(join(root, "LSSTCam/barren/empty"), { recursive: true });
 });
 
 afterAll(async () => {
@@ -47,8 +51,19 @@ describe(discoverSurveys, () => {
       "HSC/hips/dud/color_gri",
       "LSSTCam/hips/ltl2/color_gri",
       "LSSTCam/hips/ltl49/color_ugir",
+      "LSSTCam/runs/DRP/DP2/pretty/v30_0_8_rc4/dp2x1/epo/color_gri",
       "u/yusra/DM-54165/DM-54125-hips/color_gri",
     ]);
+  });
+
+  it("reaches the deepest stagings by default", async () => {
+    // the default bound is a runaway guard, not a description of the tree:
+    // treating it as one is what hid every survey below `LSSTCam/runs`
+    const result = await discoverSurveys(root);
+
+    expect(result.map(({ path }) => path)).toContain(
+      "LSSTCam/runs/DRP/DP2/pretty/v30_0_8_rc4/dp2x1/epo/color_gri"
+    );
   });
 
   it("stops at a survey root rather than descending into its tiles", async () => {
@@ -78,7 +93,7 @@ describe(discoverSurveys, () => {
   it("ignores directories that contain no survey", async () => {
     const result = await discoverSurveys(root);
 
-    expect(result.some(({ path }) => path.includes("runs"))).toBe(false);
+    expect(result.some(({ path }) => path.includes("barren"))).toBe(false);
   });
 
   it("respects the depth bound", async () => {
