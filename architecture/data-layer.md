@@ -2,8 +2,7 @@
 
 ## Craft CMS GraphQL
 
-`services/api/client.ts` exports `queryAPI({query, variables, previewToken?,
-fetchOptions?})`: urql `[cacheExchange, fetchExchange]` registered per-request
+`services/api/client.ts` exports `queryAPI({query, variables, previewToken?, fetchOptions?})`: urql `[cacheExchange, fetchExchange]` registered per-request
 via `@urql/next/rsc`, URL from `NEXT_PUBLIC_API_URL` (+`?token=` when a
 preview token exists). Default `cache: "force-cache"`; with a preview token
 it flips to `next.revalidate = 0`. Errors are only `console.warn`ed (a
@@ -16,7 +15,7 @@ One module per page/section under `services/api/`: `explorer.ts`,
 skysynth hard-`parse`s, the others `safeParse` and `notFound()` silently),
 `tours/` (incl. `paths.ts` for SSG), `guidedExperiences.ts` (has an N+1
 `ExperienceCount` query per category), `global/` (`siteInfo_GlobalSet`
-selected by *name string match*). Assets come from Canto DAM
+selected by _name string match_). Assets come from Canto DAM
 (`CantoAssetMinimal` fragment), not Craft volumes.
 
 Cache tags (`services/api/tags.ts`: `globals`/`tours`/`surveys`) are only
@@ -49,9 +48,9 @@ All import from `"zod/v4"` (zod 3.25's v4 subpath) — don't mix with plain
 `"zod"`. `lib/schema/survey.ts` (`"server-only"`) is the critical one:
 `.catch(x).default(x)` on nearly every field so malformed CMS data degrades
 to aladin-safe defaults; its transform does the **survey path rewrites**
-(`storage.googleapis.com → /api/gcs/` when `CLOUD_ENV=DEV`;
-`images.rubinobservatory.org/hips/ → /api/hips/` when `HIPS_DATA_DIR` set) —
-server-side decisions baked into the RSC payload. `surveyLayerSchema` hoists
+(`storage.googleapis.com → /api/gcs/` when `CLOUD_ENV=DEV`; the whole
+`images.rubinobservatory.org/` host → `/api/hips/`, base-path aware, when
+`HIPS_DATA_DIR` is set) — server-side decisions baked into the RSC payload. `surveyLayerSchema` hoists
 `opacity`/`optionalLayer`/`showOnLoad` into the survey object. Pattern worth
 copying from `tours/schema.ts`: `nullable().default(n).transform(a => a ?? n)`
 — `.default()` alone doesn't cover explicit GraphQL `null`.
@@ -65,12 +64,19 @@ var crashes `next start` even though those tokens only gate preview routes.
 `NODE_ENV` oddly defaults to `test`. `GOOGLE_APPLICATION_CREDENTIALS` is
 read via raw `process.env` in `lib/gcs/auth.ts`, outside the schema.
 
+The fork's additions: `HIPS_DATA_DIR` (serve surveys from this directory
+instead of the CMS list), `HIPS_SURVEY` (which discovered survey to open
+when the URL names none), `HIPS_TILE_CACHE_BYTES` (in-memory cache cap for
+served tiles), and `NEXT_PUBLIC_BASE_PATH` (mount the app under a path,
+e.g. `/skyviewer` behind the RSP ingress — baked in at build like every
+`NEXT_PUBLIC_*` value, so the image is specific to its host). Each carries
+a JSDoc note in `env.ts` explaining its constraints.
+
 ## i18n (dual-stack)
 
 **next-intl owns routing; react-i18next owns strings.** There are zero
 next-intl message-API calls: `getRequestConfig` returns only `{locale}`.
-Routing: `lib/i18n/{settings,routing,navigation}.ts`, `localePrefix:
-"as-needed"` (en unprefixed), locale cookie `NEXT_LOCALE`. Always
+Routing: `lib/i18n/{settings,routing,navigation}.ts`, `localePrefix: "as-needed"` (en unprefixed), locale cookie `NEXT_LOCALE`. Always
 import `Link`/`useRouter`/`getPathname` from `@/lib/i18n/navigation`.
 Strings: `lib/i18n/localeStrings/{en,es,ja}/translation.json` (en 136 keys;
 es/ja lag and fall back silently) + the `epo-react-lib` namespace loaded from
@@ -82,12 +88,13 @@ imports files that don't exist; `lib/locales.js` is legacy (no `ja`).
 
 ## API routes (`app/api/`)
 
-| Route | Purpose | Auth/gate |
-|-------|---------|-----------|
-| `gcs/[...path]` | dev-only proxy to `storage.googleapis.com` with a `devstorage.read_only` bearer from ADC (`lib/gcs/auth.ts`, fails open) — for embargoed buckets | `CLOUD_ENV === "DEV"` |
-| `hips/[...path]` | serves a local HiPS mirror from `$HIPS_DATA_DIR/hips/...` (note hardcoded `hips` subdir); immutable cache on hits, `no-store` on 404s | `HIPS_DATA_DIR` set |
-| `preview` | Craft draft-mode entry: validates `?secret` = `CRAFT_SECRET_TOKEN`, resolves the entry via GraphQL and redirects to the *fetched* uri (open-redirect defense), starts draft mode + `previewToken` cookie | secret |
-| `revalidate` | `?uri&secret` → `revalidatePath` for every locale + tag revalidation; always answers 200 even on bad tokens (failures easy to miss) | secret |
+| Route            | Purpose                                                                                                                                                                                                                                                                                   | Auth/gate             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `gcs/[...path]`  | dev-only proxy to `storage.googleapis.com` with a `devstorage.read_only` bearer from ADC (`lib/gcs/auth.ts`, fails open) — for embargoed buckets                                                                                                                                          | `CLOUD_ENV === "DEV"` |
+| `hips/[...path]` | serves a local HiPS mirror — the URL carries the whole path below `$HIPS_DATA_DIR`; in-memory FIFO cache (`HIPS_TILE_CACHE_BYTES`), unique `creator_did` on served `properties`; immutable cache on hits, `no-store` on 404s                                                              | `HIPS_DATA_DIR` set   |
+| `health`         | readiness endpoint for the k8s probes: answers from the live server (`force-dynamic` — a request-less GET is otherwise frozen at build time) without page SSR or CMS calls; when `HIPS_DATA_DIR` is set, also checks it is readable, against a 2 s deadline so a hung mount 503s promptly | none                  |
+| `preview`        | Craft draft-mode entry: validates `?secret` = `CRAFT_SECRET_TOKEN`, resolves the entry via GraphQL and redirects to the _fetched_ uri (open-redirect defense), starts draft mode + `previewToken` cookie                                                                                  | secret                |
+| `revalidate`     | `?uri&secret` → `revalidatePath` for every locale + tag revalidation; always answers 200 even on bad tokens (failures easy to miss)                                                                                                                                                       | secret                |
 
 Preview mode: every `queryAPI` call then auto-uses the cookie token with
 `revalidate: 0`; `PreviewMode` renders a banner with end/revalidate server

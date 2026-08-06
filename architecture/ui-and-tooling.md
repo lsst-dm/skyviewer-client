@@ -15,8 +15,7 @@ build tooling on them).
 
 Building blocks: `atomic/AladinOverlay` (pointer-events-none layer over the
 canvas; re-enables events only for interactive descendants — anything else
-portaled/rendered there needs explicit `pointer-events`), `molecules/Controls/
-Stack` (`position="bottom left"` → data attrs), `atomic/IconButton`
+portaled/rendered there needs explicit `pointer-events`), `molecules/Controls/ Stack` (`position="bottom left"` → data attrs), `atomic/IconButton`
 (forwardRef; `text` becomes `title` + visually-hidden span; palette hardcodes
 hex, not tokens).
 
@@ -40,7 +39,7 @@ CSS Modules with **native CSS nesting** (not SCSS) via `postcss.config.js`:
 custom media names (`--tablet`, `--desktop-small`, ...) live in
 `styles/global/media.css`. A custom postcss config disables Next's built-in
 pipeline; add plugins there explicitly. The SCSS side (`styles/abstracts/`)
-holds a *duplicate, drifting* set of breakpoint/palette maps only reachable
+holds a _duplicate, drifting_ set of breakpoint/palette maps only reachable
 from `.scss` files.
 
 **styled-components is entirely vestigial** (babel key in package.json is
@@ -62,8 +61,7 @@ aladin-lite itself emits ~30 typed DOM events on `aladinDiv`, see
 `usehooks-ts`. Two event mechanisms coexist: DOM `AL:` events and
 `aladin.on()` callbacks (`bindAladinEvents` maps `onFooBar` → `fooBar`).
 
-`contexts/`: `Aladin.tsx` (discriminated union on `isLoading`; **`useAladin({
-callbacks })` is not a pure read** — it registers callbacks), `Tour.tsx` (the
+`contexts/`: `Aladin.tsx` (discriminated union on `isLoading`; **`useAladin({ callbacks })` is not a pure read** — it registers callbacks), `Tour.tsx` (the
 tour state machine), `GlobalData.js` (CMS globals, last PropTypes holdout),
 `Menu`, `AudioPlayer` (re-export of react-use-audio-player), `i18next.tsx`
 (mounts both i18n providers), `TourSearch`/`TourSortFilter` (bare contexts).
@@ -72,9 +70,11 @@ tour state machine), `GlobalData.js` (CMS globals, last PropTypes holdout),
 
 - Yarn 1.22.22 pinned via `packageManager`; Node 20 (`.node-version`).
 - Husky: `commit-msg` → commitlint (conventional; **lower-case subject start
-  enforced**), `pre-push` → `yarn test`. There is **no pre-commit hook**, so
-  the configured lint-staged never runs (and it references a nonexistent
-  `fix:styled` script).
+  enforced**), `pre-commit` → `yarn verify` (lint + typecheck + test — the
+  same thing CI's `checks` job runs, by design: one script, no drift),
+  `pre-push` → `yarn test`. The old lint-staged config was dead (no
+  pre-commit hook existed, and it referenced a nonexistent `fix:styled`
+  script) and has been removed.
 - `.prettierrc.json` is an empty file — all defaults. eslint extends
   standard/next/prettier/a11y; `no-console` allows warn/error/info;
   unused imports are errors; `exhaustive-deps` is a warning. **Sharp edge:**
@@ -84,17 +84,28 @@ tour state machine), `GlobalData.js` (CMS globals, last PropTypes holdout),
   a symlink (shared installs across git worktrees, pnpm-style setups) makes
   eslint abort with `couldn't determine the plugin "import" uniquely`. The
   `u/mfl/dedupe-eslint-plugin-import` branch pins a single copy via
-  `resolutions`. Also note upstream `main` carries pre-existing prettier
-  violations in files the lint script's `*.{js,jsx}` glob never covers
-  (e.g. Search, SonificationControls) — don't "fix" them in unrelated diffs.
-- Tests: vitest + jsdom; exactly one spec (`__tests__/utilities.spec.ts`);
-  `@testing-library/react` installed but unused. `tsc --noEmit` is in no
-  script and no CI — run it yourself.
-- CI (`.github/workflows/build-and-push.yaml`): Docker buildx → GCR
-  (`develop`→dev / `main`→int / tags→prod projects), env pulled from GCP
-  Secret Manager into the build-stage `.env` mount, `.next` exported to a
-  GCS bucket for gcsFuse-based k8s serving, then `repository_dispatch` to
-  `lsst-epo/edc-deploy`. **No lint/test/typecheck runs in CI.**
+  `resolutions`. **`yarn lint` exits clean on this branch** — the fork
+  fixed the violations upstream `main` still carries (unformatted files in
+  `Listener/` and `svg/icons/`, two outdated sass calls in
+  `styles/abstracts/_functions.scss`), so expect conflicts there on
+  upstream merges. Two historical traps, both fixed here: `lint:js` used a
+  single `&` between prettier and eslint, backgrounding prettier and
+  discarding its exit code; and its prettier glob was `*.{js,jsx}` only, so
+  `.tsx` — all new work — was never format-checked. The glob now covers
+  ts/tsx, with generated `gql/` prettier-ignored so the check doesn't fight
+  `yarn codegen`.
+- Tests: vitest + jsdom; four specs under `__tests__/` — `utilities`, plus
+  the fork's `hipsDiscover`, `hipsProperties` and `tileCache` (the
+  `lib/hips/` pieces). `@testing-library/react` installed but unused.
+  Typechecking is `yarn typecheck` (`tsc --noEmit`), bundled into
+  `yarn verify` = lint + typecheck + test.
+- CI (`.github/workflows/build.yaml`, this fork's): a `checks` job runs
+  `yarn verify`, and only then does the `build` job make the Docker image
+  and push it to `ghcr.io/lsst-dm/skyviewer-client` on pushes to
+  `main`/`tickets/**` — see `deployment.md`. The pre-commit hook runs the
+  same `yarn verify`, so CI failures here mean the hook was skipped.
+  Upstream's `build-and-push.yaml` (GCR + GCS + `repository_dispatch` to
+  `lsst-epo/edc-deploy`) was dropped from the fork.
 - `tsconfig`: `@/*` → repo root; `strict: false` **but**
   `strictNullChecks: true`; `typescript-plugin-css-modules` for editor
   typing of `styles.*`.
