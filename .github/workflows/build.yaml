@@ -38,16 +38,19 @@ jobs:
       contents: "read"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      # deliberately no cache: "yarn". Measured, it saved 13s here (81s job
+      # deliberately not caching yarn. Measured, it saved 13s here (81s job
       # without it, 68s with) and cost 1.2 GB of the repository's 10 GB
       # Actions cache — budget the docker layer cache (7.3 GB, mode=max)
       # needs far more, since re-exporting the node_modules layers after a
-      # cache eviction takes about ten minutes
-      - uses: actions/setup-node@v4
+      # cache eviction takes about ten minutes. package-manager-cache must
+      # say so explicitly: from v5 this action caches on its own whenever
+      # package.json has a packageManager field, which ours does
+      - uses: actions/setup-node@v5
         with:
           node-version-file: ".node-version"
+          package-manager-cache: false
 
       - run: yarn install --frozen-lockfile
 
@@ -63,7 +66,7 @@ jobs:
       packages: "write"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Write the build-time env file
         env:
