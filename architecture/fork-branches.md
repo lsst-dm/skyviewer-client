@@ -17,6 +17,17 @@ honours `remote.pushDefault`, so with any other layout, editors and GUIs
 (VS Code's git integration included) push to `origin` and fail against
 upstream, where we have no write access.
 
+A working clone should also disable pushes to upstream outright:
+
+```bash
+git remote set-url --push upstream DISABLED
+```
+
+Pushing to someone else's repository is never something to do by accident,
+and this makes it fail loudly until an explicit URL is passed. Keep it even
+if we are granted write access there — the point is that the action stays
+deliberate.
+
 GitHub Actions are **enabled** on `lsst-dm/skyviewer-client`, but only
 after the workflow the fork inherited from upstream (`build-and-push.yaml`,
 which deploys to lsst-epo's GCP projects) was deleted and replaced by the
@@ -44,6 +55,7 @@ build on what is already merged there.
 | `u/mfl/dedupe-eslint-plugin-import` | upstream `main` | resolutions pin collapsing the two installed copies of `eslint-plugin-import` to one                                                                                                                                                                        |
 | `u/mfl/sky-curvature`               | fork `main`     | auto coordinate grid + Earth globe, both keyed on one "is the sky curved?" threshold (two commits)                                                                                                                                                          |
 | `tickets/DM-55722`                  | fork `main`     | the usdfdev staff-only deployment (active): base-path serving, the ghcr `build.yaml`, survey discovery + picker for `HIPS_DATA_DIR` trees, unique `creator_did`, in-memory tile cache, `/api/health`. Paired with `tickets/DM-55722` in `lsst-sqre/phalanx` |
+| `up/*`                              | upstream `main` | one branch per prepared upstream PR, built on `upstream/main` rather than the fork's, so each cherry-picks clean. See `upstream-contributions.md`                                                                                                           |
 
 ## The four fixes on `u/mfl/full-sky-zoom`
 
@@ -78,8 +90,16 @@ tiles with `cache-control: private, max-age=31536000`.
 
 - Branch names: `tickets/DM-<number>` for work tracked by a Rubin Jira
   ticket (the DM convention, and what Phalanx-side work is paired with);
-  `u/mfl/<topic>` for the older fork branches predating that.
+  `u/mfl/<topic>` for the older fork branches predating that; `up/<topic>`
+  for a branch prepared as an upstream PR. Not `upstream/<topic>`, which
+  would collide with the `upstream` remote's tracking refs.
 - Conventional commits enforced by commitlint (lower-case subject start).
+- **Every commit carries an `Upstream:` trailer** — `candidate` or
+  `fork-only` — recording whether we would offer it to upstream. Git can
+  already tell you what the fork has that upstream does not
+  (`git cherry upstream/main HEAD`); the trailer records the editorial
+  judgement it cannot. Strip it from `up/*` branches: it is our bookkeeping
+  and means nothing in upstream's repo. See `upstream-contributions.md`.
 - Topic branches are kept rebased-clean (fixes squashed into originating
   commits rather than appended), so expect force-pushes on any that are
   still evolving.

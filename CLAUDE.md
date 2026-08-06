@@ -100,12 +100,13 @@ are recoverable from the deployed site's JS chunks if lost.
 
 ## Architecture docs
 
-| Doc                               | Covers                                                         |
-| --------------------------------- | -------------------------------------------------------------- |
-| `architecture/overview.md`        | Stack, repo layout, data flow                                  |
-| `architecture/aladin-and-hips.md` | aladin-lite integration, HiPS format, every quirk we've hit    |
-| `architecture/experiences.md`     | Pages/routing, tours, sonification, search, embed              |
-| `architecture/data-layer.md`      | Craft CMS GraphQL, codegen, zod schemas, env, i18n, API routes |
-| `architecture/ui-and-tooling.md`  | Component system, styling, hooks, dev tooling                  |
-| `architecture/deployment.md`      | Docker build, env plumbing, upstream vs fork deployment        |
-| `architecture/fork-branches.md`   | What each fork branch changes and why                          |
+| Doc                                      | Covers                                                                   |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| `architecture/overview.md`               | Stack, repo layout, data flow                                            |
+| `architecture/aladin-and-hips.md`        | aladin-lite integration, HiPS format, every quirk we've hit              |
+| `architecture/experiences.md`            | Pages/routing, tours, sonification, search, embed                        |
+| `architecture/data-layer.md`             | Craft CMS GraphQL, codegen, zod schemas, env, i18n, API routes           |
+| `architecture/ui-and-tooling.md`         | Component system, styling, hooks, dev tooling                            |
+| `architecture/deployment.md`             | Docker build, env plumbing, upstream vs fork deployment                  |
+| `architecture/fork-branches.md`          | What each fork branch changes and why                                    |
+| `architecture/upstream-contributions.md` | What we offer upstream, the `Upstream:` commit trailer, prepared PR text |
