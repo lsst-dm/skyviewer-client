@@ -28,7 +28,33 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/tickets/') }}
 
 jobs:
+  # the same checks the pre-commit hook runs (yarn verify), so a slipped-past
+  # failure surfaces here in minutes rather than failing the image build
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: "read"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # deliberately no cache: "yarn". Measured, it saved 13s here (81s job
+      # without it, 68s with) and cost 1.2 GB of the repository's 10 GB
+      # Actions cache — budget the docker layer cache (7.3 GB, mode=max)
+      # needs far more, since re-exporting the node_modules layers after a
+      # cache eviction takes about ten minutes
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn verify
+
   build:
+    needs: "checks"
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
