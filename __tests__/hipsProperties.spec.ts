@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   parseHiPSProperties,
+  withFields,
   withUniqueCreatorDid,
 } from "@/lib/hips/properties";
 
@@ -81,6 +82,25 @@ describe(parseHiPSProperties, () => {
 
     expect(result.title).toBe("a = b");
     expect(result.cooFrame).toBe("galactic");
+  });
+});
+
+describe(withFields, () => {
+  it("replaces in place and adds what is missing, in the order given", () => {
+    const result = withFields("hips_order = 9\nobs_title = a\n", {
+      obs_title: "b",
+      hips_status: "private master unclonable",
+      hips_service_url: "https://example.org/a/b",
+    });
+
+    expect(result.split("\n").map((line) => line.split(/\s*=/)[0])).toEqual([
+      "hips_status",
+      "hips_service_url",
+      "hips_order",
+      "obs_title",
+      "",
+    ]);
+    expect(parseHiPSProperties(result).title).toBe("b");
   });
 });
 

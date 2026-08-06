@@ -109,7 +109,9 @@ Facts that matter (verified Aug 2026):
    between them showed the wrong imagery; `/api/hips` therefore rewrites
    each served `properties` to a `creator_did` derived from the survey's
    path, unique by construction (`lib/hips/properties.ts`,
-   `withUniqueCreatorDid`).
+   `surveyCreatorDid`/`withUniqueCreatorDid`). `/api/hips/hipslist` takes it
+   from the same helper — a list whose `creator_did` disagreed with the
+   served `properties` would describe a different HiPS to the client.
 
 ## Fork-added behavior in this area
 

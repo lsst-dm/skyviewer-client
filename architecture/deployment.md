@@ -114,6 +114,26 @@ networked disk on every request), and a rewrite of each `properties` file's
 `aladin-and-hips.md`: colliding `creator_did`s silently adopt each other's
 options).
 
+That makes the pod a HiPS server, so it publishes the list a HiPS server has
+to publish: `GET /api/hips/hipslist` renders the cached catalogue as the
+blank-line separated `properties` records HiPS 1.0 §5.2 defines
+(`lib/hips/hipslist.ts`), which is what lets Aladin Desktop or any other
+client discover the staged surveys without being handed each one's URL.
+Each record is the survey's own `properties` file, with the four keys the
+standard makes mandatory filled in: the same path-derived `creator_did` the
+tile route serves, `hips_service_url` for this deployment, a
+`hips_status` of `private master unclonable` (the deployment is staff-only,
+so the standard's `public master clonableOnce` default would be a false
+claim), and `hips_release_date` from the survey, falling back to when its
+`properties` file was last written.
+
+`?fmt=json` on the same URL renders those records as JSON — an array of flat
+objects, values left as strings, plus the derived `ID` key — for callers who
+would rather not parse the text. That is not an invention of ours: it is
+what the CDS aggregator the standard footnotes in §5.3 serves, and it is
+built by parsing the very records the text form emits, so the two cannot
+drift apart. The mandated text form remains the default.
+
 When `HIPS_DATA_DIR` is set, the explorer stops using the CMS survey list
 altogether and shows what is actually on disk. `lib/hips/discover.ts` walks
 the tree and treats any directory holding a `properties` file as a survey;

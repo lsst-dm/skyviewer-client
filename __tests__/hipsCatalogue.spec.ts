@@ -9,6 +9,8 @@ const survey = (path: string): DiscoveredSurvey => ({
   group: path.split("/")[0],
   label: path,
   properties: { maxOrder: 11 },
+  source: "hips_order = 11\n",
+  modifiedAt: 0,
 });
 
 /** a scan the test decides when to finish */

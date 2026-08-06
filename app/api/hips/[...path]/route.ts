@@ -2,7 +2,7 @@ import { readFile } from "fs/promises";
 import { isAbsolute, join, normalize, extname, basename, dirname } from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/env";
-import { withUniqueCreatorDid } from "@/lib/hips/properties";
+import { surveyCreatorDid, withUniqueCreatorDid } from "@/lib/hips/properties";
 import { createTileCache } from "@/lib/hips/tileCache";
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -67,7 +67,7 @@ export async function GET(
       body = Buffer.from(
         withUniqueCreatorDid(
           body.toString("utf8"),
-          `ivo://rubin.local/${dirname(relative)}`
+          surveyCreatorDid(dirname(relative))
         )
       );
     }

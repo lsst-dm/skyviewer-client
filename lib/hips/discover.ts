@@ -1,6 +1,6 @@
 "server-only";
 
-import { readdir, readFile, realpath } from "fs/promises";
+import { readdir, readFile, realpath, stat } from "fs/promises";
 import { join, sep } from "path";
 import { HiPSProperties, parseHiPSProperties } from "@/lib/hips/properties";
 
@@ -14,6 +14,15 @@ export interface DiscoveredSurvey {
   /** the rest of the path, which is what distinguishes surveys in a group */
   label: string;
   properties: HiPSProperties;
+  /** the survey's `properties` file verbatim. The viewer only needs the
+   * parsed subset above, but the HiPS list this server publishes is defined
+   * as the concatenation of these files (HiPS 1.0 §5.2), so keeping the text
+   * is what lets that endpoint answer from the catalogue instead of reading
+   * every survey again. They are a kilobyte or so each */
+  source: string;
+  /** mtime of that file, as the last-resort hips_release_date for a survey
+   * whose properties declare no date — a mandatory key in a HiPS list */
+  modifiedAt: number;
 }
 
 /**
@@ -57,7 +66,8 @@ interface WalkContext {
 
 const toSurvey = (
   relative: string,
-  properties: HiPSProperties
+  source: string,
+  modifiedAt: number
 ): DiscoveredSurvey => {
   const [group, ...rest] = relative.split(sep);
 
@@ -66,7 +76,9 @@ const toSurvey = (
     group,
     // a survey directly under the root has no remainder to distinguish it
     label: rest.length ? rest.join(sep) : group,
-    properties,
+    properties: parseHiPSProperties(source),
+    source,
+    modifiedAt,
   };
 };
 
@@ -103,10 +115,15 @@ const walk = async (
   // `properties` marks a HiPS root. Surveys do not nest, so stop here rather
   // than descending into the tile directories below
   if (entries.some((entry) => entry.name === "properties" && entry.isFile())) {
-    try {
-      const source = await readFile(join(absolute, "properties"), "utf8");
+    const file = join(absolute, "properties");
 
-      context.found.push(toSurvey(relative, parseHiPSProperties(source)));
+    try {
+      const [source, stats] = await Promise.all([
+        readFile(file, "utf8"),
+        stat(file),
+      ]);
+
+      context.found.push(toSurvey(relative, source, stats.mtimeMs));
     } catch {
       // readable a moment ago, not now — skip it rather than failing the scan
     }

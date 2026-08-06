@@ -41,7 +41,7 @@ const TILE_SIZES: ReadonlyArray<TileSize> = [32, 64, 128, 256, 512];
  * contain `=`, so only the first one separates. Later keys win, matching the
  * behaviour of the reference implementation.
  */
-const parseFields = (source: string): Record<string, string> => {
+export const parseFields = (source: string): Record<string, string> => {
   const fields: Record<string, string> = {};
 
   for (const line of source.split(/\r?\n/)) {
@@ -122,8 +122,37 @@ const asCooFrame = (value?: string): CooFrame | undefined => {
 };
 
 /**
- * Rewrites a properties file's creator_did to the given value, preserving
- * everything else.
+ * Sets `key = value` for each given field, replacing the line already there
+ * or adding one at the head of the file when it has none, in the order given.
+ *
+ * Written in the column-aligned style these files use, so an edited file
+ * still reads like one that was generated.
+ */
+export const withFields = (
+  source: string,
+  fields: Record<string, string>
+): string => {
+  const added: Array<string> = [];
+
+  const text = Object.entries(fields).reduce((text, [key, value]) => {
+    const line = `${key.padEnd(25)}= ${value}`;
+    const existing = new RegExp(`^[ \t]*${key}[ \t]*=.*$`, "m");
+
+    if (existing.test(text)) {
+      return text.replace(existing, line);
+    }
+
+    added.push(line);
+
+    return text;
+  }, source);
+
+  return added.length ? `${added.join("\n")}\n${text}` : text;
+};
+
+/**
+ * The creator_did this app serves for a survey found under HIPS_DATA_DIR,
+ * derived from its path below the mirror root and so unique by construction.
  *
  * The staged surveys share a handful of templated creator_did values, but
  * the HiPS standard requires it to uniquely identify a dataset — and aladin
@@ -131,14 +160,19 @@ const asCooFrame = (value?: string): CooFrame | undefined => {
  * HiPS whose id is already cached silently adopts the cached survey's
  * options instead of its own. Serving each survey a unique value removes
  * the whole collision class at the one place we control the data.
+ *
+ * The served `properties` and the HiPS list must agree on it, which is why
+ * both take it from here rather than spelling it out.
  */
-export const withUniqueCreatorDid = (source: string, did: string): string => {
-  const line = `creator_did              = ${did}`;
-  const replaced = source.replace(/^[ \t]*creator_did[ \t]*=.*$/m, line);
+export const surveyCreatorDid = (path: string): string =>
+  `ivo://rubin.local/${path}`;
 
-  // no creator_did to replace: prepend one
-  return replaced === source ? `${line}\n${source}` : replaced;
-};
+/**
+ * Rewrites a properties file's creator_did to the given value, preserving
+ * everything else. See `surveyCreatorDid` for why.
+ */
+export const withUniqueCreatorDid = (source: string, did: string): string =>
+  withFields(source, { creator_did: did });
 
 export const parseHiPSProperties = (source: string): HiPSProperties => {
   const fields = parseFields(source);
