@@ -187,6 +187,11 @@
       "layers": {
         "title": "Cambiar las capas de la investigación"
       },
+      "skymap": {
+        "title": "Cuadrícula de tracts del skymap",
+        "caption": "Dibuja los límites de los tracts de un skymap sobre las imágenes. Las imágenes no registran con qué skymap se construyeron, así que esto sirve para comparar.",
+        "tracts": "Límites de los tracts, etiquetados por número de tract"
+      },
       "coordinates": {
         "title": "Formato de coordenadas",
         "caption": "Cambiar el formato de coordenadas RA/DEC",

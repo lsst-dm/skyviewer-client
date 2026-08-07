@@ -195,6 +195,11 @@
       "layers": {
         "title": "Change survey layers"
       },
+      "skymap": {
+        "title": "Skymap tract grid",
+        "caption": "Draw a skymap's tract boundaries over the imagery. The imagery does not record which skymap it was built on, so these are for comparison.",
+        "tracts": "Tract boundaries, labelled by tract number"
+      },
       "coordinates": {
         "title": "Coordinate format",
         "caption": "Change the format of RA/DEC coordinates",

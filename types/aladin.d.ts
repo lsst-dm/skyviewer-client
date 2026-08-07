@@ -230,6 +230,50 @@ interface AladinOptions {
   pixelateCanvas?: boolean;
 }
 
+/** Options for a drawn shape. Note there is no label: text on the sky comes
+ * from a catalog's `displayLabel`/`labelColumn`, not from the shape. */
+interface AladinShapeOptions {
+  color?: string;
+  fill?: boolean;
+  fillColor?: string;
+  opacity?: number;
+  lineWidth?: number;
+  selectionColor?: string;
+  hoverColor?: string;
+  /** `A.polygon` sets this; `A.polyline` leaves the shape open */
+  closed?: boolean;
+}
+
+interface AladinShape {
+  id: string;
+  readonly show: () => void;
+  readonly hide: () => void;
+}
+
+interface AladinGraphicOverlayOptions {
+  name?: string;
+  color?: string;
+  lineWidth?: number;
+  lineDash?: Array<number>;
+}
+
+interface AladinGraphicOverlay {
+  name: string;
+  color: string;
+  type: "overlay";
+  readonly add: (shape: AladinShape) => void;
+  readonly addFootprints: (
+    footprints: AladinShape | Array<AladinShape>
+  ) => void;
+  /** Drops every shape; the overlay itself stays on the stack. Does not
+   * report the change on its own — call `reportChange` after mutating. */
+  readonly removeAll: () => void;
+  readonly show: () => void;
+  readonly hide: () => void;
+  readonly toggle: () => void;
+  readonly reportChange: () => void;
+}
+
 interface AladinSource {
   data: any;
 }
@@ -239,6 +283,8 @@ interface AladinCatalog {
   readonly show: () => void;
   readonly hide: () => void;
   readonly remove: (source: AladinSource) => void;
+  /** Drops every source; the catalog itself stays on the stack. */
+  readonly clear: () => void;
   readonly reportChange: () => void;
 
   name: string;
@@ -324,6 +370,11 @@ interface Aladin {
   readonly getColorMap: () => AladinColorMaps;
   readonly displayFITS: (fitsUrl: string) => void;
   readonly addCatalog: (catalog: AladinCatalog) => void;
+  readonly addOverlay: (overlay: AladinGraphicOverlay) => void;
+  /** Takes the layer itself or its name. */
+  readonly removeOverlay: (
+    overlay: AladinGraphicOverlay | AladinCatalog | string
+  ) => void;
   /** @deprecated Old method name, use `Aladin.prototype.removeOverlays` instead. */
   readonly removeLayers: () => void;
   readonly on: <T extends keyof AladinCallbackMap>(
@@ -401,7 +452,9 @@ type CatalogSourceShape =
   | "square";
 
 interface AladinCatalogOptions {
-  url: string;
+  /** required by the catalogs built from a remote table, but not by
+   * `A.catalog`, which is filled with `addSources` instead */
+  url?: string;
   name?: string;
   color?: string;
   sourceSize?: number;
@@ -458,6 +511,19 @@ interface A {
   ) => Aladin;
   readonly catalog: (options?: AladinCatalogOptions) => AladinCatalog;
   readonly source: (ra: number, dec: number, data: any) => AladinSource;
+  readonly graphicOverlay: (
+    options?: AladinGraphicOverlayOptions
+  ) => AladinGraphicOverlay;
+  /** Closes the shape. Mutates the array it is given, dropping a trailing
+   * vertex that repeats the first. */
+  readonly polygon: (
+    raDec: Array<[number, number]>,
+    options?: AladinShapeOptions
+  ) => AladinShape;
+  readonly polyline: (
+    raDec: Array<[number, number]>,
+    options?: AladinShapeOptions
+  ) => AladinShape;
   // TODO: add option info
   readonly catalogFromURL: (
     url: string,

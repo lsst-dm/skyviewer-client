@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 import { useLocalStorage, useOnClickOutside } from "usehooks-ts";
+import SkymapOverlay from "./SkymapOverlay";
 import { withBasePath } from "@/lib/basePath";
 import staticAladinOptions from "@/fixtures/defaultAladinOptions";
 import { clientInitialPosition } from "@/lib/helpers";
@@ -298,6 +299,7 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
         />
         {children}
       </div>
+      <SkymapOverlay />
     </AladinContext.Provider>
   );
 };
