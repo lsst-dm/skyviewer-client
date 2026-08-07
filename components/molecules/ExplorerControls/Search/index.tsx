@@ -2,7 +2,6 @@
 import { FC, FormEventHandler, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Trans, useTranslation } from "react-i18next";
-import { z } from "zod/v4";
 import { CloseButton, Dialog, DialogPanel } from "@headlessui/react";
 import {
   AnimatePresence,
@@ -14,26 +13,18 @@ import { IoSearchOutline, IoClose } from "react-icons/io5";
 import Skeleton from "react-loading-skeleton";
 
 import clsx from "clsx/lite";
+import CoordinateHelp from "./CoordinateHelp";
 import { useRouter } from "@/lib/i18n/navigation";
 import { viewAsParams } from "@/lib/aladin/helpers";
-import { position } from "@/lib/schema/astro";
+import {
+  parseCoordinates,
+  toDecimal,
+  toSexagesimal,
+} from "@/lib/astro/coordinates";
 import useAladinMove from "@/hooks/useAladinMove";
 import { useAladin } from "@/contexts/Aladin";
 import IconButton from "@/components/atomic/IconButton";
 import styles from "./styles.module.css";
-
-const TargetSchema = z
-  .string()
-  .transform((output) => {
-    return output.split(" ").map((value) => {
-      const clean = value.replace(/(^[\s\u200b]*|[\s\u200b]*$)/g, "");
-      return parseFloat(clean);
-    });
-  })
-  .pipe(position)
-  .transform((output) => {
-    return { ra: output[0], dec: output[1] };
-  });
 
 interface FoundTarget {
   name?: string;
@@ -47,7 +38,8 @@ interface SearchProps {
 }
 
 const Search: FC<SearchProps> = ({ buttonClassName, className }) => {
-  const { A } = useAladin();
+  const aladinContext = useAladin();
+  const { A } = aladinContext;
   const {
     t,
     i18n: { language },
@@ -108,17 +100,20 @@ const Search: FC<SearchProps> = ({ buttonClassName, className }) => {
     setError(error);
   };
 
-  const goToPosition = ({ name, ...position }: FoundTarget) => {
+  const goToPosition = (
+    { name, ...position }: FoundTarget,
+    fov: number = targetFov
+  ) => {
     setFound({ ...position, name });
     setPending(false);
     panAndGo({
       ...position,
-      fov: targetFov,
+      fov,
       onComplete: () => {
         router.push(
           `?${viewAsParams({
             target: [position.ra, position.dec],
-            fov: targetFov,
+            fov,
           }).toString()}`
         );
       },
@@ -126,9 +121,24 @@ const Search: FC<SearchProps> = ({ buttonClassName, className }) => {
   };
 
   const resolveSearch = (search: string) => {
-    const isObjectName = /[a-zA-Z]/.test(search);
+    const coordinates = parseCoordinates(search);
 
-    if (isObjectName) {
+    // A position is tried first and taken at its word — an object name
+    // never parses as one, so nothing is stolen from the resolver, while
+    // sexagesimal used to be routed to it on the strength of its h/m/s and
+    // come back as "not found". The view only recentres: someone who typed
+    // coordinates has a scale in mind, and pulling them to a fixed zoom
+    // would throw away the one they were working at.
+    if (coordinates) {
+      goToPosition(
+        coordinates,
+        aladinContext.isLoading ? targetFov : aladinContext.aladin.getFov()[0]
+      );
+
+      return;
+    }
+
+    if (/[a-zA-Z]/.test(search)) {
       A?.Utils.Sesame.resolveAstronomicalName(
         search,
         (position) => {
@@ -142,15 +152,11 @@ const Search: FC<SearchProps> = ({ buttonClassName, className }) => {
           showError(t("menu.search.error", { context: "object", search }));
         }
       );
-    } else {
-      const { data: position, error } = TargetSchema.safeParse(search);
 
-      if (error) {
-        showError(t("menu.search.error", { context: "coordinate" }));
-      } else {
-        goToPosition(position);
-      }
+      return;
     }
+
+    showError(t("menu.search.error", { context: "coordinate" }));
   };
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (event) => {
@@ -298,6 +304,32 @@ const Search: FC<SearchProps> = ({ buttonClassName, className }) => {
                           context={found.name ? "object" : "position"}
                         ></Trans>
                       )}
+                      {found && (
+                        // the position as it was understood, in both
+                        // notations. Whatever went into the box, this is
+                        // where the viewer actually went, and either line
+                        // can be pasted straight back in
+                        <dl className={styles.reading}>
+                          <div className={styles.readingRow}>
+                            <dt className={styles.readingLabel}>
+                              {t("menu.search.reading.decimal")}
+                            </dt>
+                            <dd className={styles.readingValue}>
+                              <code>{toDecimal(found).ra}</code>{" "}
+                              <code>{toDecimal(found).dec}</code>
+                            </dd>
+                          </div>
+                          <div className={styles.readingRow}>
+                            <dt className={styles.readingLabel}>
+                              {t("menu.search.reading.sexagesimal")}
+                            </dt>
+                            <dd className={styles.readingValue}>
+                              <code>{toSexagesimal(found).ra}</code>{" "}
+                              <code>{toSexagesimal(found).dec}</code>
+                            </dd>
+                          </div>
+                        </dl>
+                      )}
                     </>
                   )}
                 </output>
@@ -410,6 +442,8 @@ const Search: FC<SearchProps> = ({ buttonClassName, className }) => {
                     and declination (DEC) in decimal format, e.g. “186.2 7.0.”
                   </Trans>
                 </div>
+
+                <CoordinateHelp />
               </motion.div>
             </DialogPanel>
           </Dialog>

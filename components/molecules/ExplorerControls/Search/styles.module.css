@@ -136,3 +136,39 @@
 .noWrap {
   white-space: nowrap;
 }
+
+/* the position as the viewer read it, shown back after a search */
+.reading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-spacing-3xs);
+  margin: var(--size-spacing-2xs) 0 0;
+  font-size: 85%;
+}
+
+.readingRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--size-spacing-3xs);
+}
+
+.readingLabel {
+  flex: 0 0 auto;
+  min-inline-size: 9ch;
+  opacity: 0.75;
+}
+
+.readingValue {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-spacing-3xs);
+}
+
+/* monospaced and unbreakable, so the fields can be checked one by one and
+   a coordinate never wraps in the middle */
+.readingValue code {
+  white-space: nowrap;
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+}

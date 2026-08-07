@@ -113,11 +113,36 @@
         "item_2": "<0>Cofre de Tesoros Cósmicos</0> (el Cúmulo de Virgo)",
         "treasure_chest_chart": "¿Buscas algo específico en el Cofre de Tesoros Cósmicos? Consulta nuestro <0>mapa de búsqueda</0>"
       },
-      "instructions": "Skyviewer busca nombres comunes de objetos astronómicos, por ejemplo “M49” o “Messier 49,” utilizando las bases de datos astronómicas de <0>SIMBAD</0> y <1>NED</1>. Skyviewer también puede buscar lugares de coordenadas de objetos utilizando la ascensión recta (RA) y la declinación (DEC) en formato decimal, ejemplo “186.2 7.0.”",
+      "instructions": "Skyviewer busca nombres comunes de objetos astronómicos, por ejemplo “M49” o “Messier 49,” utilizando las bases de datos astronómicas de <0>SIMBAD</0> y <1>NED</1>. Skyviewer también puede buscar lugares de coordenadas de objetos utilizando la ascensión recta (RA) y la declinación (DEC) en formato decimal o sexagesimal, ejemplo “186.2 7.0.”",
+      "coordinates": {
+        "summary": "¿Qué formatos de coordenadas puedo usar?",
+        "intro": "Escribe o pega una posición en casi cualquier notación. La ascensión recta va primero y la declinación después.",
+        "formats": {
+          "decimal": "Grados decimales",
+          "sexagesimal": "Sexagesimal",
+          "partial": "Sin segundos",
+          "mixed": "Notaciones mixtas",
+          "labelled": "Con etiquetas de eje",
+          "frames": "Con marco o época"
+        },
+        "notes": {
+          "hours": "La ascensión recta sexagesimal se interpreta en horas, así que «12 30 49» son 12h 30m 49s. Si su primer número supera 24 no puede ser horas y se interpreta en grados.",
+          "degrees": "La ascensión recta decimal se interpreta en grados, así que «12» son 12°. Escribe «12h» si quieres decir horas.",
+          "separators": "Los espacios, las comas y los dos puntos separan números, y una coma entre las dos mitades determina dónde acaba una y empieza la otra, lo que ayuda cuando están escritas de forma distinta, como en «12 30 49.4, 7.0».",
+          "sign": "Un + o − inicial marca el comienzo de la declinación, y se conserva incluso sobre un cero, de modo que «−00 30 00» queda al sur del ecuador.",
+          "range": "La ascensión recta da la vuelta en 360°, así que «−10» son 350°. La declinación debe estar entre −90° y +90°.",
+          "zoom": "Buscar una posición recentra la vista sin cambiar el zoom. Buscar el nombre de un objeto sí acerca la vista.",
+          "names": "Lo que no sea una posición se busca como nombre de objeto, así que «M49» y «NGC 4472» siguen funcionando."
+        }
+      },
       "error_object": "Skyviewer no pudo encontrar “{{search}}”",
-      "error_coordinate": "Prueba con una coordenada ra/dec decimal válida, por ejemplo 186.2 7.0",
+      "error_coordinate": "Skyviewer no puede leer esa posición. Prueba con «186.2 7.0» o «12:30:49.4 +12:23:28», o consulta los formatos de coordenadas más abajo.",
       "found_object": "Skyviewer encontró el objeto <0>“{{name}}”</0> en <1>{{position}}</1>",
-      "found_position": "Skyviewer encontró la ubicación <0>{{position}}</0>"
+      "found_position": "Skyviewer encontró esta ubicación:",
+      "reading": {
+        "decimal": "Decimal",
+        "sexagesimal": "Sexagesimal"
+      }
     },
     "main": {
       "open": "Abrir menú principal",

@@ -121,11 +121,36 @@
         "item_2": "<0>Cosmic Treasure Chest</0> (the Virgo Cluster)",
         "treasure_chest_chart": "Looking for something specific in the Cosmic Treasure Chest? Check our <0>finder chart</0>"
       },
-      "instructions": "Skyviewer searches common names of astronomical objects, e.g. “M49” or “Messier 49,” using the <0>SIMBAD</0> and <1>NED</1> astronomical databases. Skyviewer can also search on coordinate locations of objects using right ascension (RA) and declination (DEC) in decimal format, e.g. “186.2 7.0.”",
+      "instructions": "Skyviewer searches common names of astronomical objects, e.g. “M49” or “Messier 49,” using the <0>SIMBAD</0> and <1>NED</1> astronomical databases. Skyviewer can also search on coordinate locations of objects using right ascension (RA) and declination (DEC) in decimal or sexagesimal format, e.g. “186.2 7.0.”",
+      "coordinates": {
+        "summary": "Which coordinate formats can I use?",
+        "intro": "Type or paste a position in almost any notation. Right ascension comes first, declination second.",
+        "formats": {
+          "decimal": "Decimal degrees",
+          "sexagesimal": "Sexagesimal",
+          "partial": "Without seconds",
+          "mixed": "Mixed notations",
+          "labelled": "With axis labels",
+          "frames": "With a frame or epoch"
+        },
+        "notes": {
+          "hours": "Sexagesimal right ascension is read as hours, so “12 30 49” means 12h 30m 49s. If its first number is above 24 it cannot be hours, and is read as degrees instead.",
+          "degrees": "Decimal right ascension is read as degrees, so “12” means 12°. Write “12h” if you mean hours.",
+          "separators": "Spaces, commas and colons all separate numbers, and a comma between the two halves settles where one ends and the other begins — useful when they are written differently, as in “12 30 49.4, 7.0”.",
+          "sign": "A leading + or − marks the start of the declination, and is kept even on a zero, so “−00 30 00” stays south of the equator.",
+          "range": "Right ascension wraps around 360°, so “−10” is 350°. Declination must be between −90° and +90°.",
+          "zoom": "Searching a position recentres the view and leaves the zoom alone. Searching an object name zooms in on it.",
+          "names": "Anything that is not a position is looked up as an object name, so “M49” and “NGC 4472” still work."
+        }
+      },
       "error_object": "Skyviewer couldn't find “{{search}}”",
-      "error_coordinate": "Try a valid ra/dec decimal coordinate, ex. 186.2 7.0",
+      "error_coordinate": "That is not a position Skyviewer can read. Try “186.2 7.0” or “12:30:49.4 +12:23:28”, or see the coordinate formats below.",
       "found_object": "Skyviewer found object <0>“{{name}}”</0> at <1>{{position}}</1>",
-      "found_position": "Skyviewer found location <0>{{position}}</0>"
+      "found_position": "Skyviewer found this location:",
+      "reading": {
+        "decimal": "Decimal",
+        "sexagesimal": "Sexagesimal"
+      }
     },
     "main": {
       "open": "Open main menu",
