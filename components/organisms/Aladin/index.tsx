@@ -144,12 +144,19 @@ export const Aladin: FunctionComponent<PropsWithChildren<AladinProps>> = ({
     // survey's — possibly empty — patch of sky
     const [ra, dec] = (options.target ?? "").split(" ").map(parseFloat);
 
+    // aladin never writes back to `instance.options` as the view moves, so
+    // it stays the record of where this viewer opened — which is exactly
+    // what the return-to-initial controls read. Swapping the survey has to
+    // update it too, or those controls keep sending the user to whichever
+    // survey happened to load first, off the current survey's sky entirely.
     if (Number.isFinite(ra) && Number.isFinite(dec)) {
       instance.gotoRaDec(ra, dec);
+      instance.options.target = options.target as string;
     }
 
     if (typeof options.fov === "number") {
       instance.setFov(options.fov);
+      instance.options.fov = options.fov;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature, isLoading]);
