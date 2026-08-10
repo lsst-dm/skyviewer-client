@@ -8,13 +8,18 @@ import { SurveyLayer } from "@/lib/schema/survey";
 import { HiPSProperties, parseHiPSProperties } from "@/lib/hips/properties";
 import { DiscoveredSurvey, discoverSurveys } from "@/lib/hips/discover";
 
+/** the tile format a survey whose properties omit `hips_tile_format` is
+ * requested in. Exported because the picker labels each survey with the
+ * format it will be served as, which has to be the format asked for here */
+export const DEFAULT_IMG_FORMAT: HiPSImageFormat = "png";
+
 /** what the CMS would supply for a survey it knows about, for the fields a
  * HiPS `properties` file does not carry */
 const defaults = {
   fovRange: [2, 90],
   fov: 60,
   target: "267.0208333333 -24.7800000000",
-  imgFormat: "png" as HiPSImageFormat,
+  imgFormat: DEFAULT_IMG_FORMAT,
   cooFrame: "ICRS" as CooFrame,
   maxOrder: 11,
   tileSize: 512 as TileSize,

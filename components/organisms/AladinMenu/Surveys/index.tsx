@@ -13,6 +13,11 @@ import styles from "./styles.module.css";
 export interface SurveyChoice {
   path: string;
   title?: string;
+  /** the tile format this survey is served as, from its `hips_tile_format`.
+   * Worth the bytes: the staged surveys are a mix of png and webp, the two
+   * are indistinguishable once drawn, and which one a survey got is the
+   * first thing asked about a new staging */
+  format?: HiPSImageFormat;
 }
 
 interface SurveysMenuProps {
@@ -119,10 +124,13 @@ const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
     const needle = filter.trim().toLowerCase();
 
     // match on the full path so a user name, a ticket number or a band all
-    // narrow the list, which is the only way to find one of several hundred
+    // narrow the list, which is the only way to find one of several hundred,
+    // and on the format so "webp" lists everything staged in it
     const matching = needle
-      ? surveys.filter(({ path, title }) =>
-          `${path} ${title ?? ""}`.toLowerCase().includes(needle)
+      ? surveys.filter(({ path, title, format }) =>
+          `${path} ${title ?? ""} ${format ?? ""}`
+            .toLowerCase()
+            .includes(needle)
         )
       : surveys;
 
@@ -186,7 +194,7 @@ const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
               {name} <span className={styles.tally}>{entries.length}</span>
             </summary>
             <ul className={styles.list}>
-              {entries.map(({ path, title }) => (
+              {entries.map(({ path, title, format }) => (
                 <li key={path}>
                   <button
                     type="button"
@@ -202,6 +210,16 @@ const SurveysMenu: FC<SurveysMenuProps> = ({ surveys, selected }) => {
                         the part below the heading, which is already on
                         screen a few pixels above */}
                     {within(path, name)}
+                    {format && (
+                      <span
+                        className={styles.format}
+                        // the visible text is lowercase for the eye; the
+                        // label spells out what it is for a screen reader
+                        aria-label={`${format} tiles`}
+                      >
+                        {format}
+                      </span>
+                    )}
                     {title && <span className={styles.obsTitle}>{title}</span>}
                   </button>
                 </li>

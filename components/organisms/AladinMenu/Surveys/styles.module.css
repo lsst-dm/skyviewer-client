@@ -67,6 +67,20 @@
   overflow-wrap: anywhere;
 }
 
+/* rides at the end of the survey's label rather than on a line of its own:
+   it is two syllables next to a path that wraps over three lines */
+.format {
+  margin-inline-start: 0.4rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  background-color: rgb(255 255 255 / 15%);
+  font-size: 0.75em;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  /* the paths themselves wrap anywhere, so keep the badge off the seam */
+  white-space: nowrap;
+}
+
 .obsTitle {
   display: block;
   opacity: 0.6;

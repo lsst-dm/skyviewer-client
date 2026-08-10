@@ -5,7 +5,7 @@ import { env } from "@/env";
 import AladinTemplate from "@/components/templates/Aladin";
 import Controls from "@/components/molecules/ExplorerControls";
 import { getExplorerPage } from "@/services/api/explorer";
-import { getSurveyCatalogue } from "@/lib/hips/local";
+import { DEFAULT_IMG_FORMAT, getSurveyCatalogue } from "@/lib/hips/local";
 import CurrentPositionPopover from "@/components/organisms/CurrentPositionPopover";
 import AladinMenu from "@/components/organisms/AladinMenu";
 import DisplayMenu from "@/components/organisms/AladinMenu/Display";
@@ -57,6 +57,10 @@ const ExplorerPage: FC<ExplorerProps> = async ({
               surveys={catalogue.map(({ path, properties }) => ({
                 path,
                 title: properties.title,
+                // the format the viewer will actually request, so a survey
+                // whose properties name none is labelled with the fallback
+                // it gets rather than left blank
+                format: properties.imgFormat ?? DEFAULT_IMG_FORMAT,
               }))}
             />
           )}
