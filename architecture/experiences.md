@@ -101,7 +101,7 @@ mechanism is HiPS _image_ layers from the CMS, not catalogs.
   `aladin.getViewData("blob","image/png")`; mobile short-circuits into
   `navigator.share()`. Tour variant (`TourControls/Share`) shares `?poi=N`.
 - `molecules/EmbedGenerator`: builds an iframe snippet against
-  `NEXT_PUBLIC_BASE_URL` + `/embed`. Known bug: writes `allowed=` instead of
+  the app's own origin + `/embed`. Known bug: writes `allowed=` instead of
   `allow=`, so its permissions-policy list is inert.
 - `organisms/CurrentPositionPopover`: right-click/long-press →
   `pix2world` → formatted coords (decimal or sexagesimal via

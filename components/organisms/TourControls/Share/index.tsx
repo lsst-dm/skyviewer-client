@@ -2,7 +2,7 @@
 import { FC } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { usePathname, useSearchParams } from "next/navigation";
-import { env } from "@/env";
+import { useBaseUrl } from "@/contexts/BaseUrl";
 import { useStep } from "@/lib/tutorial";
 import Share from "@/components/organisms/Share";
 
@@ -16,14 +16,12 @@ const ShareTour: FC<ShareTourProps> = ({ className }) => {
     initializeWithValue: false,
   });
   const { id } = useStep(2);
+  const baseUrl = useBaseUrl();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const poiParam = new URLSearchParams({ poi: searchParams.get("poi") || "1" });
 
-  const url = new URL(
-    `${pathname}?${poiParam.toString()}`,
-    env.NEXT_PUBLIC_BASE_URL
-  ).toString();
+  const url = new URL(`${pathname}?${poiParam.toString()}`, baseUrl).toString();
 
   return (
     <Share

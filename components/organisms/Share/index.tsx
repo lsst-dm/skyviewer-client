@@ -15,7 +15,7 @@ import {
 } from "react-share";
 import saveAs from "file-saver";
 import { useAladin } from "@/contexts/Aladin";
-import { env } from "@/env";
+import { useBaseUrl } from "@/contexts/BaseUrl";
 import { currentViewAsParams } from "@/lib/aladin/helpers";
 import { shouldShare } from "@/lib/utilities";
 import WithButtonLabel from "@/components/atomic/WithButtonLabel";
@@ -53,7 +53,8 @@ const Share: FC<ShareProps> = ({
   const { t } = useTranslation();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const baseUrl = new URL(pathname, env.NEXT_PUBLIC_BASE_URL).toString();
+  const origin = useBaseUrl();
+  const baseUrl = new URL(pathname, origin).toString();
   const [viewUrl, setViewUrl] = useState(
     url || `${baseUrl}?${new URLSearchParams(searchParams).toString()}`
   );

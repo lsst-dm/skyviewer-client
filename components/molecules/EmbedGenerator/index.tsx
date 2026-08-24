@@ -5,7 +5,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { Description, Field, Fieldset, Label } from "@headlessui/react";
 import Stack from "@rubin-epo/epo-react-lib/Stack";
 import Button from "@rubin-epo/epo-react-lib/Button";
-import { env } from "@/env";
+import { useBaseUrl } from "@/contexts/BaseUrl";
 import { isDefaultLocale } from "@/lib/i18n";
 import { getPathname } from "@/lib/i18n/navigation";
 import { viewAsParams } from "@/lib/aladin/helpers";
@@ -43,6 +43,7 @@ const buildIframe = (src: string) => {
 const EmbedGenerator: FC = () => {
   const { t } = useTranslation();
   const locale = useLocale();
+  const origin = useBaseUrl();
   const [useCurrentView, setUseCurrentView] = useState(false);
   const { aladin } = useAladin();
   const [copied, copy] = useCopyToClipboard();
@@ -64,7 +65,7 @@ const EmbedGenerator: FC = () => {
     forcePrefix: !isDefaultLocale(locale),
   });
 
-  const src = new URL(path, env.NEXT_PUBLIC_BASE_URL).toString();
+  const src = new URL(path, origin).toString();
   const iframe = buildIframe(src);
 
   const handleCopyEmbed = () => {

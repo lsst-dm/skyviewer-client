@@ -3,11 +3,14 @@ name: Build and push to GHCR
 # Builds the image this fork deploys from and pushes it to
 # ghcr.io/lsst-dm/skyviewer-client.
 #
-# NEXT_PUBLIC_* values are compiled into the client bundle by `next build`, so
-# the image is specific to the host it will be served from: it cannot be
-# promoted between environments the way a normal container can. The values
-# below come from repository variables, and changing where the app is deployed
-# means changing them and rebuilding.
+# NEXT_PUBLIC_* values are compiled into the bundle by `next build`, so anything
+# that varies by deployment must not be one. BASE_URL is read at runtime for
+# exactly that reason, and the image serves any host it is deployed behind; it
+# is set here only because the build validates the whole environment, and
+# because statically prerendered pages can carry no later value.
+#
+# NEXT_PUBLIC_BASE_PATH is still compiled in, so the image remains specific to
+# the path it is served under.
 #
 # The Dockerfile bind-mounts .env during the build and .env is gitignored, so
 # it has to be materialised into the build context first.
@@ -75,7 +78,7 @@ jobs:
           NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN: ${{ secrets.NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN }}
         run: |
           {
-            echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
+            echo "BASE_URL=${{ vars.BASE_URL }}"
             echo "NEXT_PUBLIC_BASE_PATH=${{ vars.NEXT_PUBLIC_BASE_PATH }}"
             echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}"
             echo "NEXT_PUBLIC_ASTRO_API_URL=${{ vars.NEXT_PUBLIC_ASTRO_API_URL }}"

@@ -67,10 +67,13 @@ read via raw `process.env` in `lib/gcs/auth.ts`, outside the schema.
 The fork's additions: `HIPS_DATA_DIR` (serve surveys from this directory
 instead of the CMS list), `HIPS_SURVEY` (which discovered survey to open
 when the URL names none), `HIPS_TILE_CACHE_BYTES` (in-memory cache cap for
-served tiles), and `NEXT_PUBLIC_BASE_PATH` (mount the app under a path,
-e.g. `/skyviewer` behind the RSP ingress — baked in at build like every
-`NEXT_PUBLIC_*` value, so the image is specific to its host). Each carries
-a JSDoc note in `env.ts` explaining its constraints.
+served tiles), `NEXT_PUBLIC_BASE_PATH` (mount the app under a path, e.g.
+`/skyviewer` behind the RSP ingress — baked in at build like every
+`NEXT_PUBLIC_*` value, so the image is specific to the path it is served
+under), and `BASE_URL`, which replaced upstream's `NEXT_PUBLIC_BASE_URL`
+precisely so that the host is *not* baked in: read on the server at
+runtime, one image serves any host. Each carries a JSDoc note in `env.ts`
+explaining its constraints.
 
 ## i18n (dual-stack)
 

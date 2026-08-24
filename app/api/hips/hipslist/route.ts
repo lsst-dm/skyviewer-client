@@ -40,10 +40,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  const base = new URL(
-    withBasePath("/api/hips"),
-    env.NEXT_PUBLIC_BASE_URL
-  ).toString();
+  const base = new URL(withBasePath("/api/hips"), env.BASE_URL).toString();
 
   const surveys = await getSurveyCatalogue();
 
