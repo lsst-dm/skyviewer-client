@@ -2,6 +2,7 @@
 
 import { z } from "zod/v4";
 import { env } from "@/env";
+import { withBasePath } from "@/lib/basePath";
 
 const imgFormat: HiPSImageFormat = "png";
 const cooFrame: CooFrame = "ICRS";
@@ -56,13 +57,18 @@ export const surveyImageSchema = z
   .transform(({ fovMin, fovMax, ...output }) => {
     let path =
       env.CLOUD_ENV === "DEV"
-        ? output.path.replace("https://storage.googleapis.com/", "/api/gcs/")
+        ? output.path.replace(
+            "https://storage.googleapis.com/",
+            withBasePath("/api/gcs/")
+          )
         : output.path;
 
     if (env.HIPS_DATA_DIR) {
+      // keeps the "hips" segment in the path: the route resolves the whole
+      // thing under HIPS_DATA_DIR rather than assuming that segment
       path = path.replace(
-        "https://images.rubinobservatory.org/hips/",
-        "/api/hips/"
+        "https://images.rubinobservatory.org/",
+        withBasePath("/api/hips/")
       );
     }
 

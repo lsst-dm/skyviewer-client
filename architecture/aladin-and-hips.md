@@ -54,7 +54,7 @@ Facts that matter (verified Aug 2026):
   `deployment.md`).
 - Tiles are **opaque RGB webp — including the Allsky**, whose uncovered
   cells are black filler. This is why the min-order workaround must apply to
-  the *base layer only*: an overlay's Allsky-backed texture cells paint black
+  the _base layer only_: an overlay's Allsky-backed texture cells paint black
   over everything beneath (we shipped and reverted that bug).
 - The bucket (GCS behind a load balancer; `x-goog-*` headers visible but the
   bucket name is not exposed) serves `Access-Control-Allow-Origin: *` but
@@ -77,14 +77,14 @@ Facts that matter (verified Aug 2026):
    `downloader/request/tile.rs` is commented out). Consequences: no
    per-request cache control (hence the service worker as the only
    client-side caching seam), and `window.fetch` monkeypatching doesn't
-   affect tile traffic. `Moc.fits`/`properties`/Allsky *do* use fetch.
+   affect tile traffic. `Moc.fits`/`properties`/Allsky _do_ use fetch.
 3. **Wheel zoom ignores `deltaY` magnitude** — fixed 2× per event, so a
    trackpad pinch (≈60 small events/sec) compounds absurdly (measured
    ~18,000×/s stock). The handler lazily creates `view.throttledTouchPadZoom`
    only if absent, so pre-installing our own (in `tameWheelZoom`) replaces
    the behavior without patching the package. Two subtleties: normalize by
    wheel notch (120 px, or 3 for Firefox's `DOM_DELTA_LINE`), and accumulate
-   into a per-gesture *target* fov — each `zoom.apply` call restarts a 100 ms
+   into a per-gesture _target_ fov — each `zoom.apply` call restarts a 100 ms
    animation, so stepping from the live `view.fov` loses ~80% of each step
    during a rapid stream.
 4. **Zoom-out limits are per-projection** (`ProjectionEnum.fov`): SIN
@@ -97,11 +97,21 @@ Facts that matter (verified Aug 2026):
    black-filled (RGB/jpeg channel). With `hips_order_min=3` declared, wide
    fovs render from the order-3 Allsky; without it, from nothing (bug #1).
 6. The MOC (`Moc.fits`) is fetched per-HiPS and used to cull rasterizer
-   cells; at texture depths coarser than the MOC's cells the *containing*
+   cells; at texture depths coarser than the MOC's cells the _containing_
    cell still intersects and gets drawn in full — which is how the opaque
    Allsky filler escapes culling (quirk in the "base layer only" rule above).
 7. `A.aladin()` accepts a `HiPS` object for the `survey` option (the type
    says string; both work — `setBaseImageLayer` handles either).
+8. **`creator_did` is a HiPS's cache identity.** Adding a HiPS whose
+   `creator_did` aladin has already cached silently adopts the cached
+   survey's options (URL included) instead of its own. The surveys staged at
+   USDF share a handful of templated `creator_did` values, so swapping
+   between them showed the wrong imagery; `/api/hips` therefore rewrites
+   each served `properties` to a `creator_did` derived from the survey's
+   path, unique by construction (`lib/hips/properties.ts`,
+   `surveyCreatorDid`/`withUniqueCreatorDid`). `/api/hips/hipslist` takes it
+   from the same helper — a list whose `creator_did` disagreed with the
+   served `properties` would describe a different HiPS to the client.
 
 ## Fork-added behavior in this area
 
@@ -115,8 +125,11 @@ Facts that matter (verified Aug 2026):
   best-effort (`QuotaExceededError` etc. can never fail the tile request)
   and the trim counter is primed at worker start so the cap survives short
   service-worker lifetimes. Known gap: `fits`-format tiles aren't matched.
-- `/api/hips/[...path]` + `HIPS_DATA_DIR` — optional local tile mirror
-  serving (see `deployment.md`).
+- `/api/hips/[...path]` + `HIPS_DATA_DIR` — serves surveys from local disk:
+  discovery walk + `properties` parsing in `lib/hips/`, a byte-capped
+  in-memory FIFO tile cache (`HIPS_TILE_CACHE_BYTES` — tiles are immutable,
+  so it never invalidates), and the unique-`creator_did` rewrite (quirk 8).
+  See `deployment.md` for the full mechanism.
 - The Earth-scale overlay (`components/molecules/ExplorerControls/EarthScale`)
   consumes `zoom.changed` and maps sky solid angle → Earth area
   (`fixtures/earthScale.ts`).
@@ -132,7 +145,7 @@ Facts that matter (verified Aug 2026):
   jpeg, CORS `*`) at the sky view's own fov and projection, so both spheres
   curve identically. Things learned building it:
   - Because the comparison maps the whole sky onto the whole Earth, matching
-    `fovX` degree for degree also matches the area. `view.fov` *is* the
+    `fovX` degree for degree also matches the area. `view.fov` _is_ the
     horizontal fov (`getFov()` derives fovY from the viewport aspect), so one
     `setFov(fovX)` on a same-sized div is an exact match.
   - **Aladin instances cannot be destroyed**: `View.redraw` re-arms its own
@@ -143,7 +156,7 @@ Facts that matter (verified Aug 2026):
   - Aladin puts its own classes on the div it is handed and sizes itself from
     that div's box; giving it a `position: absolute; inset: 0` div collapses
     it to zero height. Give it a plain child sized `100%`/`100%` instead.
-  - The survey's `hips_initial_fov` does *not* override the `fov` option
+  - The survey's `hips_initial_fov` does _not_ override the `fov` option
     (unlike several other properties keys — quirk 1).
   - `setCooGrid` only ever emits `cooGrid.updated`, never
     `cooGrid.enabled`/`.disabled`, so mirroring grid state means reading

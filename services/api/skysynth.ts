@@ -4,6 +4,7 @@ import { graphql } from "@/gql";
 import queryAPI from "@/services/api/client";
 import { siteFromLocale } from "@/lib/i18n/site";
 import { surveyLayerSchema } from "@/lib/schema/survey";
+import { withLocalSurvey } from "@/lib/hips/local";
 import { ra, dec, fov } from "@/lib/schema/astro";
 
 const skysynthSchema = z
@@ -58,5 +59,7 @@ export const getSkySynthPage = async (locale: string) => {
 
   if (!data || !data.skysynthEntries || !data.skysynthEntries[0]) return;
 
-  return skysynthSchema.parse(data.skysynthEntries[0]);
+  // same substitution the explorer makes: on a deployment serving local
+  // HiPS, the CMS surveys' tiles do not exist and would render blank sky
+  return withLocalSurvey(skysynthSchema.parse(data.skysynthEntries[0]));
 };

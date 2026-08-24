@@ -4,6 +4,7 @@ import { graphql } from "@/gql";
 import queryAPI from "@/services/api/client";
 import { siteFromLocale } from "@/lib/i18n/site";
 import { surveyLayerSchema } from "@/lib/schema/survey";
+import { withLocalSurvey } from "@/lib/hips/local";
 import { ra, dec, fov } from "@/lib/schema/astro";
 
 const embedSchema = z
@@ -54,5 +55,11 @@ export const getEmbedPage = async (locale: string) => {
 
   if (!data || !data.embedEntries) return;
 
-  return embedSchema.safeParse(data.embedEntries[0])?.data;
+  const page = embedSchema.safeParse(data.embedEntries[0])?.data;
+
+  if (!page) return page;
+
+  // same substitution the explorer makes: on a deployment serving local
+  // HiPS, the CMS surveys' tiles do not exist and would render blank sky
+  return withLocalSurvey(page);
 };

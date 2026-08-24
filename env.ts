@@ -16,9 +16,22 @@ export const env = createEnv({
     CRAFT_REVALIDATE_SECRET_TOKEN: z.string().min(1),
     CRAFT_SECRET_TOKEN: z.string().min(1),
     /** absolute path to a local mirror of the HiPS surveys; when set, survey
-     * tiles are served from this directory instead of the remote host. mirrors
-     * the site root, so it must contain a "hips" subdirectory */
+     * tiles are served from this directory instead of the remote host. paths
+     * below it mirror the remote host's, so a mirror of the public surveys
+     * contains a "hips" subdirectory */
     HIPS_DATA_DIR: z.string().min(1).optional(),
+    /** byte cap for the in-memory FIFO cache of served tiles; unset or 0
+     * disables it. The pod carries all tile traffic itself, so without this
+     * every tile is re-read from networked disk on every request */
+    HIPS_TILE_CACHE_BYTES: z.coerce.number().int().nonnegative().optional(),
+    /** path, relative to HIPS_DATA_DIR, of the survey to show when the URL
+     * does not name one — e.g. "LSSTCam/hips/ltl2/color_gri". Without it the
+     * first survey discovered is shown instead. Requires HIPS_DATA_DIR */
+    HIPS_SURVEY: z
+      .string()
+      .min(1)
+      .regex(/^[^/][^\0]*[^/]$/, "must be relative and not end with a slash")
+      .optional(),
     PLAUSIBLE_DOMAIN: z.string().min(1).optional(),
     /** if enabled, will add a forced Cache-Control header to RSC responses */
     NEXT_RSC_CACHE_CONTROL: COERCED_BOOLEAN.optional().default(true),
@@ -30,13 +43,28 @@ export const env = createEnv({
   },
   client: {
     NEXT_PUBLIC_BASE_URL: z.string().url(),
+    /** path the app is mounted under, when it is not served from the root of
+     * its host (e.g. "/skyviewer" behind the RSP ingress). Baked in at build
+     * time like every other NEXT_PUBLIC_ value, so it cannot be changed by
+     * the deployment without rebuilding the image */
+    NEXT_PUBLIC_BASE_PATH: z
+      .string()
+      .regex(/^\/(?!\/)[^?#]*[^/]$/, "must start with / and not end with one")
+      .optional(),
     NEXT_PUBLIC_API_URL: z.string().url(),
     NEXT_PUBLIC_ASTRO_API_URL: z.string().url(),
-    NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN: z.string().min(1),
+    /** only the browser sends this, and its value is substituted into the
+     * bundle when the image is built, so the server never reads it. Optional
+     * so a deployment does not have to carry a second copy at runtime purely
+     * to get past this check — a copy that could only ever drift from the one
+     * compiled in. Unlike NEXT_PUBLIC_ASTRO_API_URL, which lib/fetch.js does
+     * read on the server and so stays required */
+    NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN: z.string().min(1).optional(),
   },
   // For Next.js >= 13.4.4, you only need to destructure client variables:
   experimental__runtimeEnv: {
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_ASTRO_API_URL: process.env.NEXT_PUBLIC_ASTRO_API_URL,
     NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN:

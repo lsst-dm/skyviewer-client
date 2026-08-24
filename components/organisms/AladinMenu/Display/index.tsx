@@ -5,6 +5,7 @@ import { MenuItem } from "@rubin-epo/epo-react-lib/SlideoutMenu";
 import { useTranslation } from "react-i18next";
 import Submenu from "../Submenu";
 import Layers from "./Layers";
+import Skymap from "./Skymap";
 import CoordinateFormat from "./CoordinateFormat";
 import { SurveyLayer } from "@/lib/schema/survey";
 
@@ -28,6 +29,7 @@ const DisplayMenu: FC<DisplayMenuProps> = ({ layers, debug = false }) => {
       icon={<IoIosSettings />}
     >
       {layers && <Layers {...{ debug, layers }} />}
+      <Skymap />
       <CoordinateFormat />
       <MenuItem
         type="button"

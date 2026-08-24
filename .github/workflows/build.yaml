@@ -1,0 +1,94 @@
+name: Build and push to GHCR
+
+# Builds the image this fork deploys from and pushes it to
+# ghcr.io/lsst-dm/skyviewer-client.
+#
+# NEXT_PUBLIC_* values are compiled into the client bundle by `next build`, so
+# the image is specific to the host it will be served from: it cannot be
+# promoted between environments the way a normal container can. The values
+# below come from repository variables, and changing where the app is deployed
+# means changing them and rebuilding.
+#
+# The Dockerfile bind-mounts .env during the build and .env is gitignored, so
+# it has to be materialised into the build context first.
+
+"on":
+  workflow_dispatch: {}
+  push:
+    branches:
+      - "main"
+      - "tickets/**"
+    tags:
+      - "v*"
+
+# a superseded commit's image is dead weight while iterating on a ticket
+# branch, so cancel its build; main and tags always build to completion
+concurrency:
+  group: "build-${{ github.ref }}"
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/tickets/') }}
+
+jobs:
+  # the same checks the pre-commit hook runs (yarn verify), so a slipped-past
+  # failure surfaces here in minutes rather than failing the image build
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: "read"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # deliberately not caching yarn. Measured, it saved 13s here (81s job
+      # without it, 68s with) and cost 1.2 GB of the repository's 10 GB
+      # Actions cache — budget the docker layer cache (7.3 GB, mode=max)
+      # needs far more, since re-exporting the node_modules layers after a
+      # cache eviction takes about ten minutes. package-manager-cache must
+      # say so explicitly: from v5 this action caches on its own whenever
+      # package.json has a packageManager field, which ours does
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          package-manager-cache: false
+
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn verify
+
+  build:
+    needs: "checks"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: "read"
+      packages: "write"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Write the build-time env file
+        env:
+          CRAFT_REVALIDATE_SECRET_TOKEN: ${{ secrets.CRAFT_REVALIDATE_SECRET_TOKEN }}
+          CRAFT_SECRET_TOKEN: ${{ secrets.CRAFT_SECRET_TOKEN }}
+          NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN: ${{ secrets.NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN }}
+        run: |
+          {
+            echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
+            echo "NEXT_PUBLIC_BASE_PATH=${{ vars.NEXT_PUBLIC_BASE_PATH }}"
+            echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}"
+            echo "NEXT_PUBLIC_ASTRO_API_URL=${{ vars.NEXT_PUBLIC_ASTRO_API_URL }}"
+            echo "NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN=${NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN}"
+            echo "CLOUD_ENV=${{ vars.CLOUD_ENV }}"
+            echo "CRAFT_REVALIDATE_SECRET_TOKEN=${CRAFT_REVALIDATE_SECRET_TOKEN}"
+            echo "CRAFT_SECRET_TOKEN=${CRAFT_SECRET_TOKEN}"
+          } > .env
+
+      - uses: lsst-sqre/build-and-push-to-ghcr@v1
+        id: build
+        with:
+          image: ${{ github.repository }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: echo "pushed ghcr.io/${{ github.repository }}:${{ steps.build.outputs.tag }}"

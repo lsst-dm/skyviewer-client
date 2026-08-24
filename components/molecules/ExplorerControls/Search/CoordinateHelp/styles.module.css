@@ -1,0 +1,65 @@
+.help {
+  font-size: 80%;
+}
+
+.summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-spacing-2xs);
+  margin-block-start: var(--size-spacing-2xs);
+}
+
+.intro {
+  margin: 0;
+}
+
+.formats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-spacing-3xs);
+  margin: 0;
+}
+
+.format {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--size-spacing-3xs);
+}
+
+.name {
+  flex: 0 0 auto;
+  min-inline-size: 11ch;
+  font-weight: bold;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-spacing-3xs);
+  margin: 0;
+}
+
+/* the notation has to survive being read character by character, so it is
+   set monospaced and kept from wrapping mid-coordinate */
+.example {
+  white-space: nowrap;
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", monospace;
+  font-size: 95%;
+  padding: 0.1em 0.4em;
+  border-radius: 0.25em;
+  background: rgb(255 255 255 / 12%);
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-spacing-3xs);
+  margin: 0;
+  padding-inline-start: 1.2em;
+}

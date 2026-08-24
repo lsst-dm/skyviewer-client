@@ -12,15 +12,15 @@ public-outreach browser for LSST sky imagery. Three pillars:
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| Framework | Next.js ~14.2 (app router, `[locale]` segment), React 18, TypeScript |
-| Sky rendering | aladin-lite 3.6.5 (wasm core) — see `aladin-and-hips.md` |
+| Layer          | Tech                                                                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework      | Next.js ~14.2 (app router, `[locale]` segment), React 18, TypeScript                                                                     |
+| Sky rendering  | aladin-lite 3.6.5 (wasm core) — see `aladin-and-hips.md`                                                                                 |
 | Content/config | Craft CMS GraphQL (`api.skyviewer.app`), urql, GraphQL codegen, zod validation (zod 3.25 via its `zod/v4` subpath) — see `data-layer.md` |
-| i18n | next-intl (routing/server) + react-i18next (component strings), en/es/ja |
-| UI | atomic-design components, CSS modules (+ SCSS globals), `@rubin-epo/epo-react-lib`, `motion` — see `ui-and-tooling.md` |
-| Audio | p5 / web audio for sonification |
-| Tests/tooling | vitest (minimal), prettier/eslint/stylelint, husky + commitlint (conventional, lower-case subjects), yarn v1 |
+| i18n           | next-intl (routing/server) + react-i18next (component strings), en/es/ja                                                                 |
+| UI             | atomic-design components, CSS modules (+ SCSS globals), `@rubin-epo/epo-react-lib`, `motion` — see `ui-and-tooling.md`                   |
+| Audio          | p5 / web audio for sonification                                                                                                          |
+| Tests/tooling  | vitest (minimal), prettier/eslint/stylelint, husky + commitlint (conventional, lower-case subjects), yarn v1                             |
 
 ## Data flow (explorer page)
 
@@ -38,17 +38,21 @@ Craft CMS ──GraphQL──► services/api/* ──► page props (surveys, f
 ```
 
 The Next server only ever serves HTML/JS and the small API routes — all tile
-traffic is browser → bucket (CORS `*`).
+traffic is browser → bucket (CORS `*`). The exception is a `HIPS_DATA_DIR`
+deployment (usdfdev): the CMS survey list is replaced by a scan of the local
+tree and every tile is served through the pod's `/api/hips` route, with an
+optional in-memory cache — see `deployment.md`.
 
 ## Repo layout
 
 ```
 app/[locale]/...        # routes: explorer, skysynth, embed, tours, ...
-app/api/                # gcs proxy, hips local mirror, preview, revalidate
+app/api/                # gcs proxy, hips local mirror, health, preview, revalidate
 components/             # atomic → molecules → organisms → templates
 contexts/               # Aladin, Tour, AudioPlayer, Menu, GlobalData, ...
 hooks/                  # useAladinEvent, useAladinMove, keyboard controls...
 lib/aladin/             # helpers (events, zoom, min-order), animation, astro
+lib/hips/               # local surveys: discovery walk, properties, tile cache
 lib/schema/             # zod schemas for CMS payloads (survey, astro)
 lib/i18n/               # locale strings (en/es/ja), site mapping
 services/api/           # one module per CMS query + fragments/ + client.ts

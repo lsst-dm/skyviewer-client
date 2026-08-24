@@ -17,14 +17,15 @@
     "bs": "next build && next start -p 3000",
     "commitlint": "commitlint --edit",
     "prepare": "husky install",
-    "precommit": "lint-staged",
     "lint": "npm-run-all lint:*",
-    "lint:js": "prettier --check \"**/*.{js,jsx}\" & eslint -c .eslintrc.cjs \"**/*.{js,jsx,ts,tsx}\"",
+    "lint:js": "prettier --check \"**/*.{js,jsx,ts,tsx}\" && eslint -c .eslintrc.cjs \"**/*.{js,jsx,ts,tsx}\"",
     "lint:scss": "stylelint --config .stylelintrc.js \"**/*.scss\"",
     "fix": "npm-run-all fix:js fix:scss",
-    "fix:js": "prettier --write \"**/*.{js,jsx}\" && eslint -c .eslintrc.cjs \"**/*.{js,jsx,ts,tsx}\" --fix",
+    "fix:js": "prettier --write \"**/*.{js,jsx,ts,tsx}\" && eslint -c .eslintrc.cjs \"**/*.{js,jsx,ts,tsx}\" --fix",
     "fix:scss": "stylelint --config .stylelintrc.js \"**/*.scss\" --fix",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm-run-all lint typecheck test",
     "release": "commit-and-tag-version",
     "codegen": "graphql-codegen --config codegen.ts"
   },
@@ -51,11 +52,6 @@
     "defaults",
     "not IE 11"
   ],
-  "lint-staged": {
-    "*.{js,jsx}": "yarn fix:js",
-    "*.scss": "yarn fix:scss",
-    "**/styles.js": "yarn fix:styled"
-  },
   "dependencies": {
     "@babel/runtime": "7.11.2",
     "@floating-ui/react-dom": "^2.1.2",

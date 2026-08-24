@@ -7,14 +7,14 @@ from `lib/i18n/settings.ts`; `localePrefix: "as-needed"` so `en` is
 unprefixed). `middleware.ts` is just next-intl's `createMiddleware` — no
 custom redirects or auth. `app/api/*` sits outside the locale segment.
 
-| Route | Page | Notes |
-|-------|------|-------|
-| `/` | `components/pages/Home` | cover + CTAs; fetches skysynth config only to decide whether to show the "Listen" link |
-| `/explorer` | main viewer | `getExplorerPage`, `AladinTemplate` + `ExplorerControls` + `CurrentPositionPopover` |
-| `/skysynth` | sonification viewer | `Listener` is `dynamic(..., {ssr:false})` (p5 needs `window`); its layout hardcodes an unlocalized title |
-| `/embed` | iframe-targeted viewer | `embedded` prop hides the menu |
-| `/guided-experiences` | tour category hub | |
-| `/tours/[tour]/{,intro,tour,summary}` | tour flow | only `/tours/[tour]/tour` is `force-dynamic` (reads `searchParams.poi`) |
+| Route                                 | Page                    | Notes                                                                                                    |
+| ------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `/`                                   | `components/pages/Home` | cover + CTAs; fetches skysynth config only to decide whether to show the "Listen" link                   |
+| `/explorer`                           | main viewer             | `getExplorerPage`, `AladinTemplate` + `ExplorerControls` + `CurrentPositionPopover`                      |
+| `/skysynth`                           | sonification viewer     | `Listener` is `dynamic(..., {ssr:false})` (p5 needs `window`); its layout hardcodes an unlocalized title |
+| `/embed`                              | iframe-targeted viewer  | `embedded` prop hides the menu                                                                           |
+| `/guided-experiences`                 | tour category hub       |                                                                                                          |
+| `/tours/[tour]/{,intro,tour,summary}` | tour flow               | only `/tours/[tour]/tour` is `force-dynamic` (reads `searchParams.poi`)                                  |
 
 SSG: locales + tour slugs via `generateStaticParams`; everything else is
 default-cached RSC, freshened by tag-based revalidation (`services/api/tags.ts`:
@@ -25,7 +25,12 @@ default-cached RSC, freshened by tag-based revalidation (`services/api/tags.ts`:
 **View params (`?target=`, `?fov=`) are client-side only** — read by the
 Aladin organism via `useSearchParams` + `clientInitialPosition`, and only on
 pages passing `initializeWithParams` (explorer, embed). The server render
-never varies on them.
+never varies on them. The exception is the fork's `?survey=<path>` (which
+local survey to show): the explorer page reads it from `searchParams`
+**server-side** — so that page renders dynamically — because the layer is
+built on the server from the survey's on-disk `properties`
+(`lib/hips/local.ts`). An unknown value falls back to the default survey
+rather than erroring, which is also what keeps it from escaping the mirror.
 
 ## Tours
 
@@ -64,7 +69,7 @@ Two cooperating client pieces over the normal viewer:
   black — off-survey "void"), and plays sources via `SamplePlayer` (flag →
   instrument, `g_r` color → pitch, `gmag` → amplitude) and a continuous
   `PixelSynth` WebAudio drone (RGB hue → scale degree).
-- `PointSearcher.js` is the only real *data* sonification: urql against
+- `PointSearcher.js` is the only real _data_ sonification: urql against
   `NEXT_PUBLIC_ASTRO_API_URL` (`getRangeOfAstroObjectsWithLimit`), KD-tree
   neighbor search, FoV-dependent magnitude/limit ladders in `parameters.js`.
 
@@ -87,7 +92,7 @@ detail popups over HiPS catalogs) are **dead code paths** — nothing imports
 `Catalogs`; the `Catalog` GraphQL fragment is never queried; the fixtures
 (`testHiPSCatalogs`, `testMarkerLayers`, `testPois`, `placeholderTours`) and
 the `ExplorerControls/Filters` UI are likewise dormant. The live overlay
-mechanism is HiPS *image* layers from the CMS, not catalogs.
+mechanism is HiPS _image_ layers from the CMS, not catalogs.
 
 ## Share & embed
 
