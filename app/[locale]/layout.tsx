@@ -12,6 +12,7 @@ import { fallbackLng, languages } from "@/lib/i18n/settings";
 import { routing } from "@/lib/i18n/routing";
 import { serverTranslation } from "@/lib/i18n/server";
 import I18NextClientProvider from "@/contexts/i18next";
+import { BaseUrlProvider } from "@/contexts/BaseUrl";
 import SkeletonGlobal from "@/components/organisms/SkeletonGlobal";
 import { env } from "@/env";
 import { getGlobalData } from "@/services/api/global";
@@ -35,7 +36,7 @@ export async function generateMetadata({
       default: title,
       template: `%s | ${title}`,
     },
-    metadataBase: new URL(env.NEXT_PUBLIC_BASE_URL),
+    metadataBase: new URL(env.BASE_URL),
     alternates: { canonical: "./" },
     openGraph: {
       description: globals?.siteDescription ?? undefined,
@@ -74,14 +75,16 @@ const RootLayout: FunctionComponent<PropsWithChildren<RootProps>> = ({
         <body
           className={clsx(SourceSansPro.variable, NotoSansJapanese.variable)}
         >
-          <I18NextClientProvider locale={locale}>
-            <StyledComponentsRegistry>
-              <SkeletonGlobal>
-                <PreviewMode />
-                {children}
-              </SkeletonGlobal>
-            </StyledComponentsRegistry>
-          </I18NextClientProvider>
+          <BaseUrlProvider value={env.BASE_URL}>
+            <I18NextClientProvider locale={locale}>
+              <StyledComponentsRegistry>
+                <SkeletonGlobal>
+                  <PreviewMode />
+                  {children}
+                </SkeletonGlobal>
+              </StyledComponentsRegistry>
+            </I18NextClientProvider>
+          </BaseUrlProvider>
           {env.PLAUSIBLE_DOMAIN && (
             <Script
               defer

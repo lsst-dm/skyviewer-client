@@ -35,7 +35,7 @@ const ExplorerPage: FC<ExplorerProps> = async ({
   const properties = surveys.map(({ survey }) => {
     const absolute = survey.path.startsWith("http")
       ? survey.path
-      : `${env.NEXT_PUBLIC_BASE_URL}${survey.path}`;
+      : `${env.BASE_URL}${survey.path}`;
     const { pathname, origin } = new URL(absolute);
 
     return new URL(`${pathname}/properties`, origin).toString();

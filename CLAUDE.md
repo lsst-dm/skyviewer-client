@@ -66,7 +66,7 @@ required vars. No `.env` ships with the repo. For local dev against the
 production CMS, create `.env.local`:
 
 ```bash
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+BASE_URL="http://localhost:3000"                          # server-side; not baked into the bundle
 NEXT_PUBLIC_API_URL="https://api.skyviewer.app/api"       # answers unauthenticated queries
 NEXT_PUBLIC_ASTRO_API_URL="https://us-central1-edc-prod-eef0.cloudfunctions.net/astro-objects-api"
 NEXT_PUBLIC_ASTRO_OBJECTS_API_TOKEN="<recover from the skyviewer.app client bundle — it is public by design>"
@@ -79,7 +79,9 @@ CLOUD_ENV="PROD"                                          # DEV enables the /api
 ```
 
 All `NEXT_PUBLIC_*` values are baked into the client bundle at build time and
-are recoverable from the deployed site's JS chunks if lost.
+are recoverable from the deployed site's JS chunks if lost. `BASE_URL` is
+deliberately not one of them — it is read on the server at runtime so a single
+image can serve more than one host; see `architecture/deployment.md`.
 
 ## Things that will bite you
 

@@ -38,10 +38,13 @@ HiPS surveys staged at `/sdf/group/rubin/shared/hips_views`. Two halves:
   `tickets/**` and pushes `ghcr.io/lsst-dm/skyviewer-client` (in-progress
   builds for a superseded ticket-branch commit are cancelled). It
   materializes `.env` from repository variables and secrets first, because
-  the Dockerfile bind-mounts it. Since `NEXT_PUBLIC_*` values are compiled
-  into the bundle, **the image is specific to its host and base path**
-  (`usdf-rsp-dev.slac.stanford.edu` + `/skyviewer` via
-  `NEXT_PUBLIC_BASE_PATH`) and cannot be promoted between environments.
+  the Dockerfile bind-mounts it. `NEXT_PUBLIC_*` values are compiled into the
+  bundle, so **the image is specific to the base path it is served under**
+  (`/skyviewer`, via `NEXT_PUBLIC_BASE_PATH`) — but not to a host: the server
+  reads `BASE_URL` at runtime, so one image serves usdfdev and usdfprod
+  alike. Statically prerendered pages are the exception, since they can only
+  carry the value the build was given; the browser corrects what it acts on
+  (see `contexts/BaseUrl`).
 - **Deployment**: `applications/skyviewer` in `lsst-sqre/phalanx`, synced by
   Argo CD. Behind Gafaelfawr on `read:image` with `loginRedirect`. One
   replica, `Recreate` strategy (rolling would surge a second pod and briefly

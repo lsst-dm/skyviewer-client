@@ -12,7 +12,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   return {
     name,
     description: globals?.siteDescription ?? undefined,
-    start_url: env.NEXT_PUBLIC_BASE_URL,
+    start_url: env.BASE_URL,
     display: "standalone",
     background_color: "#1f2121",
     theme_color: "#1f2121",

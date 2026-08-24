@@ -27,7 +27,7 @@ const TourSummary: FC<TourSummaryProps> = async ({ tour }) => {
   const { t } = await useTranslation();
   const locale = await getLocale();
   const path = getPathname({ href: { pathname: `/tours/${tour}` }, locale });
-  const url = new URL(path, env.NEXT_PUBLIC_BASE_URL).toString();
+  const url = new URL(path, env.BASE_URL).toString();
 
   return (
     <FullwidthWithNav

@@ -12,6 +12,18 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "test", "production"]).default("test"),
   },
   server: {
+    /** absolute origin the app is served from, e.g.
+     * "https://usdf-rsp.slac.stanford.edu". Server-side, and deliberately not
+     * a NEXT_PUBLIC_ value: Next substitutes those into every bundle when the
+     * image is built, which would pin one image to one host. Read at runtime,
+     * the same image serves any host it is deployed behind.
+     *
+     * Statically prerendered output is the exception — pages rendered at build
+     * time can only carry the value the build was given, so `metadataBase`,
+     * the web manifest and tour share links reflect the building host. What
+     * the browser acts on does not: client components take the origin the
+     * browser actually used (see contexts/BaseUrl) */
+    BASE_URL: z.string().url(),
     CLOUD_ENV: z.enum(["PROD", "INT", "DEV"]).default("DEV"),
     CRAFT_REVALIDATE_SECRET_TOKEN: z.string().min(1),
     CRAFT_SECRET_TOKEN: z.string().min(1),
@@ -42,7 +54,6 @@ export const env = createEnv({
       .default(3600),
   },
   client: {
-    NEXT_PUBLIC_BASE_URL: z.string().url(),
     /** path the app is mounted under, when it is not served from the root of
      * its host (e.g. "/skyviewer" behind the RSP ingress). Baked in at build
      * time like every other NEXT_PUBLIC_ value, so it cannot be changed by
@@ -63,7 +74,6 @@ export const env = createEnv({
   },
   // For Next.js >= 13.4.4, you only need to destructure client variables:
   experimental__runtimeEnv: {
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_ASTRO_API_URL: process.env.NEXT_PUBLIC_ASTRO_API_URL,
