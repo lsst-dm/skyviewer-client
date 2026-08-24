@@ -42,11 +42,38 @@ HiPS surveys staged at `/sdf/group/rubin/shared/hips_views`. Two halves:
   into the bundle, **the image is specific to its host and base path**
   (`usdf-rsp-dev.slac.stanford.edu` + `/skyviewer` via
   `NEXT_PUBLIC_BASE_PATH`) and cannot be promoted between environments.
-- **Deployment**: `applications/skyviewer` in `lsst-sqre/phalanx` (branch
-  `tickets/DM-55722` while in development), synced by Argo CD. Behind
-  Gafaelfawr on `read:image` with `loginRedirect`. One replica, `Recreate`
-  strategy (at one replica RollingUpdate wedges — see the chart comment),
-  `pullPolicy: Always` so a pod replacement picks up a rebuilt mutable tag.
+- **Deployment**: `applications/skyviewer` in `lsst-sqre/phalanx`, synced by
+  Argo CD. Behind Gafaelfawr on `read:image` with `loginRedirect`. One
+  replica, `Recreate` strategy (rolling would surge a second pod and briefly
+  ask for twice its several-GiB request — see the chart comment). The image
+  is pinned by the chart's `appVersion`, which `values.yaml` documents as the
+  default for `image.tag`, so an upgrade is a one-line Phalanx PR and Argo
+  shows the diff.
+
+### Releases
+
+Deployments pin a **date tag**, `vYYYY.MM.DD` (`v2026.08.24.1` for a second
+release the same day), cut on `main`:
+
+```bash
+git tag -a v2026.08.24 -m "..." && git push origin v2026.08.24
+```
+
+`build.yaml` triggers on `v*` as well as on branches, and the shared action's
+`docker-tag.sh` passes the ref through unchanged, so the tag becomes the image
+tag verbatim: `ghcr.io/lsst-dm/skyviewer-client:v2026.08.24`.
+
+The scheme is dated rather than semver because **the fork shares a tag
+namespace with upstream** — it carries `v1.7.x`/`v1.8.0` from `lsst-epo` and
+fetches more with every sync. Any `vX.Y.Z` we invented would eventually
+collide with a real upstream release, and git refuses to update an existing
+tag, so the fetch would break and the name would mean two things. A date also
+avoids claiming a semver relationship the fork does not have: `main` already
+contains upstream commits made after `v1.8.0`, so it is not "1.8.0 plus our
+patches".
+
+Branch builds still happen — `main` and `tickets/**` push mutable tags — but
+they are for testing, not for anything Phalanx pins.
 
 Because the surveys are private, tiles cannot stream browser → bucket as
 upstream's do: the pod carries all tile traffic itself via `/api/hips`

@@ -46,8 +46,9 @@ yarn static:build       # production build (what the Dockerfile runs)
   `react-hooks/exhaustive-deps` _warnings_ are expected — warnings don't
   fail anything.
 - CI (`.github/workflows/build.yaml`, this fork only) runs `yarn verify`,
-  then builds on pushes to `main` and `tickets/**` and pushes to
-  `ghcr.io/lsst-dm/skyviewer-client`. It materializes `.env` from repository
+  then builds on pushes to `main`, `tickets/**` and `v*` tags and pushes to
+  `ghcr.io/lsst-dm/skyviewer-client`. Deployments pin the date tags
+  (`vYYYY.MM.DD`); branch tags are mutable and only for testing. It materializes `.env` from repository
   variables and secrets first, because the Dockerfile bind-mounts it and it
   is gitignored. Build time tracks what you touched — docs can be a full
   cache hit (`.dockerignore` excludes them), app source is ~7 min, and any
