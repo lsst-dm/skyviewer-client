@@ -133,6 +133,7 @@ const toLayer = (path: string, properties: HiPSProperties): SurveyLayer => {
       cooFrame: properties.cooFrame ?? defaults.cooFrame,
       maxOrder: properties.maxOrder ?? defaults.maxOrder,
       tileSize: properties.tileSize ?? defaults.tileSize,
+      navPois: [],
     },
   };
 };

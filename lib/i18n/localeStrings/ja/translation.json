@@ -18,6 +18,21 @@
       "listen": "音で楽しむ"
     }
   },
+  "destination-picker": {
+    "open": "ナビゲーション",
+    "title": "ナビゲーション",
+    "close": "閉じる",
+    "destinations": {
+      "cosmic-treasure-chest": {
+        "label": "ルービンの宇宙の宝箱（おとめ座銀河団）",
+        "description": "おとめ座銀河団の南の領域"
+      },
+      "ocean-of-stars": {
+        "label": "星たちの海",
+        "description": "天の川銀河系平面近くの星々"
+      }
+    }
+  },
   "guided-experiences": {
     "title": "ガイドツアー",
     "tour_one": "ツアー",
@@ -66,7 +81,7 @@
     "summary": {
       "title": "おめでとうございます。",
       "cta": "ツアー終了です。友達と共有できます。",
-      "back": "天体観測ツアーに戻る。"
+      "back": "ガイド一覧に戻る"
     }
   },
   "controls": {
@@ -98,6 +113,7 @@
         "list_header": "たとえば次をためしてみてください",
         "item_1": "<0>星たちの海</0>",
         "item_2": "<0>宇宙の宝箱</0> (おとめ座銀河団)",
+        "item_3": "<0>COSMOS</0>",
         "treasure_chest_chart": "「宇宙の宝箱」で見たい天体をお探しですか？ <0>ファインダーチャート</0>で探してみましょう。"
       },
       "instructions": "スカイビューワーは天体の一般的な名称 (\"M49\" や \"Messier 49\") にも一部対応しています（<0>SIMBAD</0> や <1>NED</1> に登録されているもの）。スカイビューは赤経赤緯などの座標による検索にも対応しています。 (\"186.2 7.0.\")",
@@ -192,6 +208,21 @@
         }
       }
     },
+    "skysynth-help": {
+      "open": "ヘルプ",
+      "title_1": "操作方法",
+      "close": "閉じる",
+      "text": " 音を通して宇宙を探検してみましょう。これは米国自然科学財団(NSF)-米国エネルギー省(DOE) Vera C. Rubin 天文台が捉えた深い宇宙の夜空の画像を音の風景に変換したものです。星々の色を音の高さに、明るさを音の大きさに割り当てました。",
+      "title_2": "探検をはじめるには",
+      "step_1": "再生を押すと Rubin の巨大な視野を流れるように移動します。",
+      "step_2": "下にあるスライダーを使うと移動速度を調整できます。",
+      "step_3": "中断を押すとマニュアルでコントロールすることができます。",
+      "step_4": "十字キーか WASD のキーを押すとそれに応じて移動ができます。",
+      "step_5": "クリックやタップしてドラッグすると自由にみて回ることができます。",
+      "step_6": "マウススクロールか、プラス(+)やマイナス(-)ボタンで拡大縮小ができます。",
+      "step_7": "右側のナビゲーションボタンを押すとおもしろいところにジャンプすることができます。",
+      "learn_more": "スカイシンセの仕組みについて詳しくしりたい方はこちら"
+    },
     "display": {
       "title": "表示",
       "cta": "スカイビューワーの設定を変える",
@@ -230,5 +261,9 @@
     "revalidate_error": "There was a problem revalidating this page",
     "revalidate_tooltip": "If your page uses an external resource like NOIRLab's news and image feed, requesting revalidation may update content on the page.",
     "exit": "Exit preview mode"
+  }, 
+  "network": {
+    "offline": "スカイビューワーはオフラインです。",
+    "limited_connection": "ネットワークが不安定です。"
   }
 }

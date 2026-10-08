@@ -7,14 +7,16 @@ from `lib/i18n/settings.ts`; `localePrefix: "as-needed"` so `en` is
 unprefixed). `middleware.ts` is just next-intl's `createMiddleware` — no
 custom redirects or auth. `app/api/*` sits outside the locale segment.
 
-| Route                                 | Page                    | Notes                                                                                                    |
-| ------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `/`                                   | `components/pages/Home` | cover + CTAs; fetches skysynth config only to decide whether to show the "Listen" link                   |
-| `/explorer`                           | main viewer             | `getExplorerPage`, `AladinTemplate` + `ExplorerControls` + `CurrentPositionPopover`                      |
-| `/skysynth`                           | sonification viewer     | `Listener` is `dynamic(..., {ssr:false})` (p5 needs `window`); its layout hardcodes an unlocalized title |
-| `/embed`                              | iframe-targeted viewer  | `embedded` prop hides the menu                                                                           |
-| `/guided-experiences`                 | tour category hub       |                                                                                                          |
-| `/tours/[tour]/{,intro,tour,summary}` | tour flow               | only `/tours/[tour]/tour` is `force-dynamic` (reads `searchParams.poi`)                                  |
+| Route                                                | Page                    | Notes                                                                                                    |
+| ---------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `/`                                                  | `components/pages/Home` | cover + CTAs; fetches skysynth config only to decide whether to show the "Listen" link                   |
+| `/explorer`                                          | main viewer             | `getExplorerPage`, `AladinTemplate` + `ExplorerControls` + `CurrentPositionPopover`                      |
+| `/skysynth`                                          | sonification viewer     | `Listener` is `dynamic(..., {ssr:false})` (p5 needs `window`); its layout hardcodes an unlocalized title |
+| `/embed`                                             | iframe-targeted viewer  | `embedded` prop hides the menu                                                                           |
+| `/guided-experiences`                                | tour category hub       |                                                                                                          |
+| `/tours`                                             | redirect                | to `/guided-experiences`                                                                                 |
+| `/tours/[tourCategory]`                              | tours in one category   |                                                                                                          |
+| `/tours/[tourCategory]/[tour]/{,intro,tour,summary}` | tour flow               | only `.../tour` is `force-dynamic` (reads `searchParams.poi`)                                            |
 
 SSG: locales + tour slugs via `generateStaticParams`; everything else is
 default-cached RSC, freshened by tag-based revalidation (`services/api/tags.ts`:
@@ -34,8 +36,8 @@ rather than erroring, which is also what keeps it from escaping the mirror.
 
 ## Tours
 
-Flow: `/guided-experiences` → `/tours` → `/tours/[tour]` → `.../intro` →
-`.../tour?poi=N` → `.../summary`.
+Flow: `/guided-experiences` → `/tours/[tourCategory]` → `.../[tour]` →
+`.../intro` → `.../tour?poi=N` → `.../summary`.
 
 - Data: `services/api/tours/*`. A POI carries its own animation timing
   (`zoomOutTime`, `zoomOutFov`, `panTime`, `zoomInTime`), position
@@ -83,9 +85,10 @@ silently go dark.
 `ExplorerControls/Search`: input with letters → CDS **Sesame** name resolver
 via aladin's built-in `A.Utils.Sesame` (browser → SIMBAD/NED direct, no app
 backend); otherwise parsed as `ra dec` decimal degrees (zod). Success pans
-via `useAladinMove` to fov 0.6 and pushes `?target&fov`. The panel's two
-hardcoded "quick link" destinations are duplicated in
-`SonificationControls/Navigation/destinations.ts` and are locale-prefix-unaware.
+via `useAladinMove` to fov 0.6 and pushes `?target&fov`. The panel's three
+hardcoded "quick link" destinations are locale-prefix-unaware. Skysynth's
+`DestinationPicker` reads its destinations from each survey's `navPois` in
+the CMS.
 
 `services/api/astroObject.js` + `components/organisms/Catalogs` (object
 detail popups over HiPS catalogs) are **dead code paths** — nothing imports

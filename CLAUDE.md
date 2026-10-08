@@ -92,9 +92,12 @@ image can serve more than one host; see `architecture/deployment.md`.
   files omit `hips_order_min`; aladin loads tiles via `HtmlImageElement` (not
   fetch); the Allsky previews have no alpha channel; and several aladin
   options get silently clobbered by its properties parser.
-- The CMS schema can be ahead of or behind this code — unknown GraphQL fields
+- The CMS schema can be ahead of or behind this code. Unknown GraphQL fields
   log warnings at request time (e.g. `faqMenuContent`) but don't fail the
-  page.
+  page. An unknown **type** fails the whole query and takes the page with
+  it (the explorer 404s; see `architecture/data-layer.md`). Upstream deploys
+  in step with the CMS, so `Tried to load an unregistered type` in the logs
+  means upstream has a query port to merge.
 - aladin behavior is testable without the dev server: `npm pack aladin-lite@3.6.5`, a small HTML page importing `dist/aladin.js`, and
   headless Chrome (`--headless=new`, do **not** pass `--disable-gpu` on macOS
   — it kills WebGL2). Production HiPS serve `Access-Control-Allow-Origin: *`.

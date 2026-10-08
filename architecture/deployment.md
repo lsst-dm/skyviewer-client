@@ -86,6 +86,20 @@ renders the home page against the CMS, which intermittently overran the
 default 1 s timeout, marked the only pod unready, and surfaced as transient
 503s.
 
+A hostPath volume is bound when the container is created. If the node has
+not yet mounted the network filesystem behind it, the PV's
+`type: Directory` check is satisfied by whatever empty directory sits at
+that path on the node's root disk, the container binds that, and mounting
+the filesystem afterwards never reaches it. The health route then answers
+`{"reason":"ENOENT: ... hips_views"}` for the container's whole life (five
+days on usdfdev in October 2026, after an SDF storage disruption).
+`grep /sdf /proc/mounts` in the pod tells the cases apart: the real mount
+is `wekafs`, or `nfs4` on nodes that mount SDF over NFS; the stale one is
+`xfs` on `/dev/mapper/vg_raid-lv_root`. Readiness never restarts anything,
+so the chart also points a liveness probe at the health route. A restart
+re-binds the volume, which heals the pod once the node has the filesystem
+and leaves a climbing restart count while it doesn't.
+
 ### Why build times vary so much (20 s to 16 min)
 
 The shared `lsst-sqre/build-and-push-to-ghcr` action caches layers in the

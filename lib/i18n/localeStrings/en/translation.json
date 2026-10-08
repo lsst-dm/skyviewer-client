@@ -18,7 +18,7 @@
       "listen": "Listen"
     }
   },
-  "skysynth-navigation": {
+  "destination-picker": {
     "open": "Navigation",
     "title": "Navigation",
     "close": "Close",
@@ -81,7 +81,7 @@
     "summary": {
       "title": "Congratulations",
       "cta": "You have completed the tour! You can share it with your friends",
-      "back": "Back to astronomical tours"
+      "back": "Back to guided experiences"
     }
   },
   "controls": {
@@ -119,6 +119,7 @@
         "list_header": "Go straight to:",
         "item_1": "<0>Ocean of Stars</0>",
         "item_2": "<0>Cosmic Treasure Chest</0> (the Virgo Cluster)",
+        "item_3": "<0>COSMOS</0>",
         "treasure_chest_chart": "Looking for something specific in the Cosmic Treasure Chest? Check our <0>finder chart</0>"
       },
       "instructions": "Skyviewer searches common names of astronomical objects, e.g. “M49” or “Messier 49,” using the <0>SIMBAD</0> and <1>NED</1> astronomical databases. Skyviewer can also search on coordinate locations of objects using right ascension (RA) and declination (DEC) in decimal or sexagesimal format, e.g. “186.2 7.0.”",
@@ -213,6 +214,21 @@
           "instructions": "Paste this code block into your sites HTML to display an embedded version of the Skyviewer"
         }
       }
+    },
+    "skysynth-help": {
+      "open": "Help",
+      "title_1": "How it works",
+      "close": "Close",
+      "text": " Explore the Universe through sound. This interactive experience transforms NSF-DOE Vera C. Rubin Observatory's deep view of the night sky into an evolving soundscape, where color becomes pitch and brightness becomes volume.",
+      "title_2": "To begin your exploration",
+      "step_1": "Press Play to start drifting across Rubin's vast field of view.",
+      "step_2": "Use the slider at the bottom of the screen to control how fast you move.",
+      "step_3": "Press Pause to take control manually.",
+      "step_4": "Use your arrow keys, or the WASD keys to move in any direction.",
+      "step_5": "Or, click and drag with your mouse or trackpad (or tap and drag on a touchscreen) to explore freely.",
+      "step_6": "Scroll your mouse or press the plus (+) and minus (-) buttons to zoom in and out.",
+      "step_7": "To jump to a point of interest, press the Navigation button on the right side of the screen",
+      "learn_more": "Learn more about the Skysynth sonification"
     },
     "display": {
       "title": "Display",

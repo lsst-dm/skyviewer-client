@@ -18,7 +18,7 @@
       "listen": "Versión sonora"
     }
   },
-  "skysynth-navigation": {
+  "destination-picker": {
     "open": "Navegación",
     "title": "Navegación",
     "close": "Cerrar",
@@ -81,7 +81,7 @@
     "summary": {
       "title": "¡Felicitaciones!",
       "cta": "¡Has completado el tour! Puedes compartirlo con tus amigos",
-      "back": "Volver a Tours Astronómicos"
+      "back": "Volver a Experiencias Guiadas"
     }
   },
   "controls": {
@@ -111,6 +111,7 @@
         "list_header": "Dirígete a:",
         "item_1": "<0>Un Océano de Estrellas</0>",
         "item_2": "<0>Cofre de Tesoros Cósmicos</0> (el Cúmulo de Virgo)",
+        "item_3": "<0>COSMOS</0>",
         "treasure_chest_chart": "¿Buscas algo específico en el Cofre de Tesoros Cósmicos? Consulta nuestro <0>mapa de búsqueda</0>"
       },
       "instructions": "Skyviewer busca nombres comunes de objetos astronómicos, por ejemplo “M49” o “Messier 49,” utilizando las bases de datos astronómicas de <0>SIMBAD</0> y <1>NED</1>. Skyviewer también puede buscar lugares de coordenadas de objetos utilizando la ascensión recta (RA) y la declinación (DEC) en formato decimal o sexagesimal, ejemplo “186.2 7.0.”",
@@ -206,6 +207,21 @@
         }
       }
     },
+    "skysynth-help": {
+      "open": "Ayuda",
+      "title_1": "Cómo funciona",
+      "close": "Cerrar",
+      "text": "Explora el Universo a través del sonido. Esta experiencia interactiva transforma la vista profunda del cielo nocturno captada por el Observatorio Vera C. Rubin de NSF-DOE en un paisaje sonoro en constante evolución, donde el color se convierte en tono y el brillo, en volumen.",
+      "title_2": "Comienza tu exploración",
+      "step_1": "Pulsa el icono de reproducción para comenzar a recorrer el enorme campo de visión de Rubin.",
+      "step_2": "Utiliza el control deslizante en la parte inferior de la pantalla para ajustar la velocidad de desplazamiento.",
+      "step_3": "Pulsa el icono de pausa para detener el recorrido y explorar por tu cuenta.",
+      "step_4": "En tu teclado, utiliza las teclas de flechas o W-A-S-D para desplazarte en cualquier dirección.",
+      "step_5": "También puedes hacer clic y arrastrar con el mouse o trackpad, o tocar y arrastrar en una pantalla táctil, para explorar libremente.",
+      "step_6": "Desplaza la rueda del mouse o pulsa los botones más (+) y menos (-) para acercar o alejar la vista.",
+      "step_7": "Para ir directamente a un punto de interés, pulsa el icono de ubicación (Navegación), ubicado en la parte derecha de la pantalla.",
+      "learn_more": "Más información sobre la sonificación de Skysynth"
+    },
     "display": {
       "title": "Visualizar",
       "cta": "Configurar el Skyviewer",
@@ -232,7 +248,8 @@
       "title": "Acceso rápido",
       "links": {
         "explorer": "Explorador de Skyviewer",
-        "guided-experiences": "$t(guided-experiences.title)"
+        "guided-experiences": "$t(guided-experiences.title)",
+        "skysynth": "Skysynth"
       }
     }
   }

@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CloseButton, Dialog, DialogPanel } from "@headlessui/react";
 import {
@@ -7,33 +7,101 @@ import {
   TargetAndTransition,
   Transition,
 } from "motion/react";
-import IconComposer from "@rubin-epo/epo-react-lib/IconComposer";
-
 import clsx from "clsx/lite";
-import destinations, { Destination } from "./destinations";
+import IconComposer from "components/svg/IconComposer";
+
+import type { SurveyLayer } from "@/lib/schema/survey";
 import IconButton from "@/components/atomic/IconButton";
 import parameters from "@/components/organisms/Listener/parameters";
 import { useAladin } from "@/contexts/Aladin";
 import useAladinMove from "@/hooks/useAladinMove";
 import styles from "./styles.module.css";
-
-interface NavigationProps {
+interface DestinationPickerProps {
+  layers: SurveyLayer[];
+  target: string;
   buttonClassName?: string;
   className?: string;
 }
+interface Destination {
+  id: string;
+  layerId: string;
+  label: string;
+  description?: string;
+  ra: number;
+  dec: number;
+}
 
-const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
+function generateDestinations(layers: SurveyLayer[]): Destination[] {
+  if (!layers?.length) return [];
+
+  return (
+    [...layers]
+      // reversing to match how the layers are loaded into Aladin in order to get the correct base layer
+      .reverse()
+      .flatMap((layer, layerIndex) => {
+        if (!layer.survey.navPois.length) return [];
+
+        return layer.survey.navPois
+          .filter((navPoi) => navPoi.enabledInNavigation)
+          .map((navPoi) => {
+            return {
+              id: navPoi.id,
+              layerId: layerIndex === 0 ? "base" : layer.id,
+              label: navPoi.navPoiTitle,
+              description: navPoi.navPoiDescription || "",
+              ra: navPoi.ra,
+              dec: navPoi.dec,
+            };
+          });
+      })
+  );
+}
+
+function findDestinationByTarget(
+  destinations: Destination[],
+  target: string
+): Destination | undefined {
+  const [targetRa, targetDec] = target.split(" ").map(Number);
+
+  return destinations.find(
+    (destination) =>
+      // Comparing the RA and DEC we get on load to the ones in destinations. Should we be rounding these numbers?
+      destination.ra === targetRa && destination.dec === targetDec
+  );
+}
+
+const DestinationPicker: FC<DestinationPickerProps> = ({
+  layers,
+  target,
+  buttonClassName,
+  className,
+}) => {
   const { t } = useTranslation();
   const [isOpen, setOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>("ocean-of-stars");
   const { isLoading } = useAladin();
   const goToPosition = useAladinMove();
+  const hasInitializedLayer = useRef(false);
 
-  const closeNavigation = () => {
+  const destinations: Destination[] = generateDestinations(layers);
+
+  const initialDestination =
+    findDestinationByTarget(destinations, target) ?? destinations[0];
+
+  // Only sync layer on first render — later updates come from handleDestinationClick
+  if (initialDestination && !hasInitializedLayer.current) {
+    parameters.selectedLayerId = initialDestination.layerId;
+    hasInitializedLayer.current = true;
+  }
+
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialDestination?.id ?? null
+  );
+
+  const closeDestinationPicker = () => {
     setOpen(false);
   };
 
-  const toggleNavigation = () => {
+  const toggleDestinationPicker = () => {
     setOpen(!isOpen);
   };
 
@@ -41,10 +109,12 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
     if (isLoading) return;
 
     setSelectedId(id);
-    closeNavigation();
+
+    closeDestinationPicker();
     // Pause the walker's movement and void/boundary tracking while we travel
     parameters.resettingPosition = true;
     parameters.selectedLayerId = layerId;
+
     goToPosition({
       ra,
       dec,
@@ -76,9 +146,9 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
     <>
       <IconButton
         styleAs="primary"
-        text={t("skysynth-navigation.open", "Navigation")}
-        onClick={toggleNavigation}
-        icon={<IconComposer icon="Pin" />}
+        text={t("destination-picker.open", "Navigation")}
+        onClick={toggleDestinationPicker}
+        icon={<IconComposer icon="PinToPin" />}
         className={clsx(styles.toggleButton, buttonClassName)}
       />
       <AnimatePresence>
@@ -87,7 +157,7 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
             static
             open={isOpen}
             className={clsx(styles.dialog, className)}
-            onClose={closeNavigation}
+            onClose={closeDestinationPicker}
           >
             <DialogPanel className={styles.panel}>
               <motion.div className={styles.backdrop} {...animations.dialog} />
@@ -98,7 +168,7 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
                 <div className={styles.content}>
                   <div className={styles.header}>
                     <h2 className={styles.title}>
-                      {t("skysynth-navigation.title", "Navigation")}
+                      {t("destination-picker.title", "Navigation")}
                     </h2>
                     <CloseButton
                       as={motion.button}
@@ -107,9 +177,9 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
                       animate={{ x: 0, opacity: 1 }}
                       exit={{ x: 15, opacity: 0 }}
                       transition={animations.dialog.transition}
-                      key={t("skysynth-navigation.close", "Close")}
+                      key={t("destination-picker.close", "Close")}
                     >
-                      {t("skysynth-navigation.close", "Close")}
+                      {t("destination-picker.close", "Close")}
                     </CloseButton>
                   </div>
                   <div className={styles.textContent}>
@@ -129,14 +199,14 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
                           >
                             <span className={styles.destinationLabel}>
                               {t(
-                                `skysynth-navigation.destinations.${destination.id}.label`,
+                                `destination-picker.destinations.${destination.id}.label`,
                                 destination.label
                               )}
                             </span>
                             {destination.description && (
                               <span className={styles.destinationDescription}>
                                 {t(
-                                  `skysynth-navigation.destinations.${destination.id}.description`,
+                                  `destination-picker.destinations.${destination.id}.description`,
                                   destination.description
                                 )}
                               </span>
@@ -156,4 +226,4 @@ const Navigation: FC<NavigationProps> = ({ buttonClassName, className }) => {
   );
 };
 
-export default Navigation;
+export default DestinationPicker;

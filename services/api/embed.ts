@@ -31,7 +31,7 @@ export const getEmbedPage = async (locale: string) => {
   const Query = graphql(`
     query EmbeddedPage($site: [String]) {
       embedEntries(site: $site) {
-        ... on embed_embed_Entry {
+        ... on embed_Entry {
           title
           ra
           dec

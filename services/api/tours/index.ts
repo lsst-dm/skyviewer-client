@@ -8,13 +8,26 @@ import { siteFromLocale } from "@/lib/i18n/site";
 import queryAPI from "@/services/api/client";
 import { surveyLayerSchema } from "@/lib/schema/survey";
 
-export const getAllTours = async ({ locale }: { locale: string }) => {
+export type GetToursParams = {
+  locale: string;
+  categorySlug?: string;
+};
+
+export const getTours = async ({ locale, categorySlug }: GetToursParams) => {
   const site = siteFromLocale(locale);
 
   const query = graphql(`
-    query AllTours($site: [String], $includeInFeed: Boolean) {
-      toursEntries(site: $site, includeInFeed: $includeInFeed) {
-        ... on tours_tour_Entry {
+    query ToursByCategory(
+      $site: [String]
+      $includeInFeed: Boolean
+      $categorySlug: [String]
+    ) {
+      toursEntries(
+        site: $site
+        includeInFeed: $includeInFeed
+        relatedToCategories: { slug: $categorySlug }
+      ) {
+        ... on tour_Entry {
           id
           complexity
           duration
@@ -42,6 +55,7 @@ export const getAllTours = async ({ locale }: { locale: string }) => {
     variables: {
       site: [site],
       includeInFeed: true,
+      categorySlug: categorySlug ? [categorySlug] : null,
     },
     fetchOptions: {
       next: { tags: [tagStore.tours] },
@@ -61,7 +75,7 @@ export const getTourMetadata = async ({ slug }: { slug: string }) => {
   const query = graphql(`
     query TourMetadata($site: [String], $slug: [String]) {
       toursEntries(site: $site, slug: $slug) {
-        ... on tours_tour_Entry {
+        ... on tour_Entry {
           title
           complexity
           duration
@@ -120,7 +134,7 @@ export const getTour = async ({ slug }: { slug: string }) => {
   const query = graphql(`
     query Tour($site: [String], $slug: [String]) {
       toursEntries(site: $site, slug: $slug) {
-        ... on tours_tour_Entry {
+        ... on tour_Entry {
           title
           slug
           thumbnail {
@@ -138,14 +152,14 @@ export const getTour = async ({ slug }: { slug: string }) => {
           introHeading
           introSubheading
           introContentBlocks {
-            ... on introContentBlocks_introBlock_BlockType {
+            ... on introBlock_Entry {
               id
               text: body
             }
           }
           factsHeading
           factsContentBlocks {
-            ... on factsContentBlocks_factsContentBlock_BlockType {
+            ... on factsContentBlock_Entry {
               id
               text: body
             }
@@ -186,13 +200,13 @@ export const getTourInitial = async ({
   const Query = graphql(`
     query TourInitial($site: [String], $slug: [String], $offset: Int) {
       toursEntries(slug: $slug, site: $site) {
-        ... on tours_tour_Entry {
+        ... on tour_Entry {
           title
           surveys {
             ...SurveyLayer
           }
           tourPois(limit: 1, offset: $offset) {
-            ... on tourPois_tourPoi_BlockType {
+            ... on tourPoi_Entry {
               fov
               ra
               dec
@@ -238,9 +252,9 @@ export const getTourPois = async (tour: string) => {
   const Query = graphql(`
     query TourPoi($site: [String], $slug: [String]) {
       toursEntries(slug: $slug, site: $site) {
-        ... on tours_tour_Entry {
+        ... on tour_Entry {
           tourPois {
-            ... on tourPois_tourPoi_BlockType {
+            ... on tourPoi_Entry {
               id
               title: poiTitle
               description
