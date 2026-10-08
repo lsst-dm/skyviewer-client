@@ -18,9 +18,17 @@ interface RootProps {
   params: RootParams;
 }
 
+type TourCategoryParams = {
+  tourCategory: string;
+};
+
+interface TourCategoryProps {
+  params: TourCategoryParams & RootParams;
+}
+
 type TourParams = {
   tour: string;
 };
 interface TourProps {
-  params: TourParams & RootParams;
+  params: TourParams & TourCategoryParams & RootParams;
 }

@@ -29,11 +29,12 @@ const parameters = {
   audioBuffers: {}, // Object to store multiple audio buffers
   minGRColour: 0, // Minimum green-red color value
   maxGRColour: 1.6, // Maximum green-red color value
-  gmagMin: 16, // Minimum gmag value
-  gmagMax: 28, // Maximum gmag value
+  gmagMin: 8, // Minimum gmag value
+  gmagMax: 26, // Maximum gmag value
   freqScaling: 0.4, // Frequency scaling factor
-  ampScaling: 1, // Amplitude scaling factor
-  maxSampleVolume: 0.4, // Maximum volume for samples
+  ampScaling: 4, // Amplitude scaling factor
+  maxSampleVolume: 1, // Maximum volume for samples
+  pixelMasGain: 1.5,
   // API parameters, need to set with intial values
   currentRaDec: [187.77035, 8.07268], // Current RA and Dec coordinates
   startingPosition: [187.77035, 8.07268], // Starting position in Ra/Dec
@@ -49,27 +50,27 @@ const parameters = {
   queryMag: 0, // Query magnitude for API calls
   queryLimit: 0, // Query limit for API calls
   magnitudeRanges: [
-    { max: 0.04, value: 35 },
-    { max: 0.08, value: 35 },
-    { max: 0.16, value: 24.5 },
-    { max: 0.32, value: 23 },
-    { max: 0.64, value: 22 },
-    { max: 1.28, value: 19 },
+    { max: 0.04, value: 30 },
+    { max: 0.08, value: 26 },
+    { max: 0.16, value: 24 },
+    { max: 0.32, value: 22.5 },
+    { max: 0.64, value: 21 },
+    { max: 1.28, value: 19.5 },
     { max: 2.56, value: 18.5 },
     { max: 5.12, value: 18 },
   ], // Piecewise magnitude ranges
   limitRanges: [
-    { max: 0.04, value: 2000 },
-    { max: 0.08, value: 3000 },
-    { max: 0.16, value: 5000 },
-    { max: 0.32, value: 6000 },
-    { max: 0.64, value: 7000 },
-    { max: 1.28, value: 6000 },
-    { max: 2.56, value: 4000 },
-    { max: 5.12, value: 2000 },
+    { max: 0.04, value: 10000 },
+    { max: 0.08, value: 10000 },
+    { max: 0.16, value: 10000 },
+    { max: 0.32, value: 10000 },
+    { max: 0.64, value: 10000 },
+    { max: 1.28, value: 10000 },
+    { max: 2.56, value: 10000 },
+    { max: 5.12, value: 10000 },
   ], // Piecewise limit ranges
 
-  selectedLayerId: "15642", // Layer ids for aladin.getOverlayImageLayer(parameters.selectedLayerId)
+  selectedLayerId: "base", // overwritten once by Navigation on skysynth load
 };
 
 export default parameters;

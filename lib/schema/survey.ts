@@ -3,6 +3,7 @@
 import { z } from "zod/v4";
 import { env } from "@/env";
 import { withBasePath } from "@/lib/basePath";
+import { ra, dec } from "@/lib/schema/astro";
 
 const imgFormat: HiPSImageFormat = "png";
 const cooFrame: CooFrame = "ICRS";
@@ -18,6 +19,17 @@ const defaults = {
   maxOrder: 11,
   tileSize,
 };
+
+export const navPoiSchema = z.object({
+  id: z.string(),
+  navPoiTitle: z.string(),
+  navPoiDescription: z.string().nullable(),
+  ra,
+  dec,
+  enabledInNavigation: z.boolean(),
+});
+
+export type NavPoi = z.infer<typeof navPoiSchema>;
 
 export const surveyImageSchema = z
   .object({
@@ -53,6 +65,7 @@ export const surveyImageSchema = z
       .default(defaults.tileSize),
     title: z.string().nullable().optional(),
     path: z.string(),
+    navPois: z.array(navPoiSchema).default([]),
   })
   .transform(({ fovMin, fovMax, ...output }) => {
     let path =

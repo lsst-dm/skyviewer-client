@@ -1,16 +1,24 @@
 "use client";
 import { FC, useState } from "react";
-import Zoom from "../Controls/Zoom";
-import ControlStack from "../Controls/Stack";
-import Navigation from "./Navigation";
 import PlayPauseButton from "./PlayPauseButton/index";
 import OrientedSlider from "./OrientedSlider";
 import HelpPanel from "./HelpPanel";
+import ControlStack from "@/components/molecules/Controls/Stack";
+import Zoom from "@/components/molecules/Controls/Zoom";
+import DestinationPicker from "@/components/molecules/DestinationPicker";
 import parameters from "@/components/organisms/Listener/parameters";
 import AladinOverlay from "@/components/atomic/AladinOverlay";
 import styles from "./styles.module.css";
 
-const SonificationControls: FC = () => {
+interface SonificationControlsProps {
+  surveys: any;
+  target: string;
+}
+
+const SonificationControls: FC<SonificationControlsProps> = ({
+  surveys,
+  target,
+}) => {
   const [sliderValue, setSliderValue] = useState(parameters.walkSpeed);
 
   const handleSliderChange = (value: number) => {
@@ -33,7 +41,7 @@ const SonificationControls: FC = () => {
         </ControlStack>
         <ControlStack position="middle right">
           <div className={styles.centeredControls}>
-            <Navigation />
+            <DestinationPicker layers={surveys} target={target} />
             <Zoom />
           </div>
         </ControlStack>

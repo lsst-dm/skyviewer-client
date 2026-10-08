@@ -107,13 +107,13 @@ class SamplePlayer {
         const pointPX = this.aladin.world2pix(point.point[0], point.point[1]);
         const pointFreqData = linearMap(
           point.gRColor,
-          parameters.minGRColour,
           parameters.maxGRColour,
+          parameters.minGRColour,
           0,
           1,
           true
         ); // Map br color to frequency
-        let pointAmplitude = linearMap(
+        const pointAmplitude = linearMap(
           point.gmag,
           parameters.gmagMax,
           parameters.gmagMin,
@@ -121,8 +121,17 @@ class SamplePlayer {
           1,
           true
         ); // Map size to amplitude
+        const minStarVolume = 0.001;
+        const minGalVolume = 0.05;
+        const maxStarVolume = 0.25;
+        const maxGalVolume = 4;
+        const masStarGalGain = 1.5;
+
+        let maxVolume = maxGalVolume;
+        let minVolume = minGalVolume;
         if (point.flag === "s") {
-          pointAmplitude *= 0.1; // Scale down amplitude for stars
+          minVolume = minStarVolume;
+          maxVolume = maxStarVolume;
         }
         const instrument = pointTypeToInstrument[point.flag] || "harp"; // Default to 'harp' if type is not found
         let pan = 0;
@@ -136,11 +145,14 @@ class SamplePlayer {
           true
         );
         pan = Math.min(Math.max(pan, -1), 1); // Ensure pan stays within the valid range
+
+        const amplitudeScaled =
+          masStarGalGain *
+          (minVolume +
+            (maxVolume - minVolume) * pointAmplitude ** parameters.ampScaling);
         this.playSample(
           pointFreqData ** parameters.freqScaling,
-          0.025 +
-            parameters.maxSampleVolume *
-              pointAmplitude ** parameters.ampScaling,
+          amplitudeScaled,
           instrument,
           pan
         ); // Play the sample with the mapped values
