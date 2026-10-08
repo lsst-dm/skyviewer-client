@@ -19,12 +19,15 @@ const respond = (status: number, body: Record<string, string>) =>
   });
 
 /**
- * Readiness endpoint for the deployment's probes. Answers from the running
- * server without rendering a page, so probes don't ride on CMS latency.
- * When a local HiPS mirror is configured its mount is checked too: a
- * viewer that cannot read tiles isn't serving, even if Next.js is up.
- * External services are deliberately not checked — failing readiness on a
- * dependency the pod cannot fix only widens that dependency's outage.
+ * Health endpoint for the deployment's readiness and liveness probes.
+ * Answers from the running server without rendering a page, so probes don't
+ * ride on CMS latency. When a local HiPS mirror is configured its mount is
+ * checked too: a viewer that cannot read tiles isn't serving, even if
+ * Next.js is up, and a restart re-binds a mount the container got before
+ * the node had the filesystem. External services are deliberately not
+ * checked: failing on a dependency the pod cannot fix only widens that
+ * dependency's outage, and the liveness probe would keep restarting the
+ * container through it.
  */
 export async function GET() {
   if (env.HIPS_DATA_DIR) {
