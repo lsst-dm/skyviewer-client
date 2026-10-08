@@ -35,7 +35,19 @@ rendered), and the untyped fragment files (`image.js`, `page.js`,
 `NEXT_PUBLIC_API_URL`** — no checked-in schema file, so `yarn codegen` needs
 network + a full env (it imports `env.ts`, so even `CRAFT_*` dummies must be
 set). After editing any query string, re-run codegen or the tagged template
-silently degrades to `unknown` typing.
+silently degrades to `unknown` typing. `yarn fix` counts as editing one:
+prettier reformats the GraphQL inside `graphql(...)` calls, and the lookup is
+by exact source string, so formatting upstream's unformatted queries on a
+merge needs a codegen run after it (`tsc` reports the mismatch as
+`Property 'toursEntries' does not exist on type '{}'` and the like).
+
+The CMS runs **Craft 5** (upstream ported to it in `3252643`, September
+2026). Entry types are named `<entryType>_Entry` (`explorer_Entry`,
+`tour_Entry`) rather than `<section>_<entryType>_Entry`, and Matrix blocks
+became entries (`surveys_layer_BlockType` is `layer_Entry`). A query naming
+a type the schema doesn't have fails outright with `Tried to load an
+unregistered type`, so a CMS upgrade ahead of the deployed image takes the
+explorer page to a 404.
 
 Fragment masking is generated but unused — results are fed raw into zod, so
 **the zod layer is load-bearing, not defensive**: Craft's `Number` scalar
@@ -96,7 +108,7 @@ imports files that don't exist; `lib/locales.js` is legacy (no `ja`).
 | `gcs/[...path]`  | dev-only proxy to `storage.googleapis.com` with a `devstorage.read_only` bearer from ADC (`lib/gcs/auth.ts`, fails open) — for embargoed buckets                                                                                                                                          | `CLOUD_ENV === "DEV"` |
 | `hips/[...path]` | serves a local HiPS mirror — the URL carries the whole path below `$HIPS_DATA_DIR`; in-memory FIFO cache (`HIPS_TILE_CACHE_BYTES`), unique `creator_did` on served `properties`; immutable cache on hits, `no-store` on 404s                                                              | `HIPS_DATA_DIR` set   |
 | `hips/hipslist`  | the HiPS list every HiPS server must publish (HiPS 1.0 §5.2): the cached catalogue rendered as blank-line separated `properties` records, `text/plain`, `no-store`; `?fmt=json` renders the same records as CDS's aggregator does (§5.3 footnote). Static segment, so it resolves ahead of `hips/[...path]` | `HIPS_DATA_DIR` set   |
-| `health`         | readiness endpoint for the k8s probes: answers from the live server (`force-dynamic` — a request-less GET is otherwise frozen at build time) without page SSR or CMS calls; when `HIPS_DATA_DIR` is set, also checks it is readable, against a 2 s deadline so a hung mount 503s promptly | none                  |
+| `health`         | readiness/liveness probe endpoint: answers from the live server (`force-dynamic` — a request-less GET is otherwise frozen at build time) without page SSR or CMS calls; when `HIPS_DATA_DIR` is set, also checks it is readable, against a 2 s deadline so a hung mount 503s promptly     | none                  |
 | `preview`        | Craft draft-mode entry: validates `?secret` = `CRAFT_SECRET_TOKEN`, resolves the entry via GraphQL and redirects to the _fetched_ uri (open-redirect defense), starts draft mode + `previewToken` cookie                                                                                  | secret                |
 | `revalidate`     | `?uri&secret` → `revalidatePath` for every locale + tag revalidation; always answers 200 even on bad tokens (failures easy to miss)                                                                                                                                                       | secret                |
 
